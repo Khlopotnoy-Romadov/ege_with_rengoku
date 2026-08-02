@@ -1,9 +1,11 @@
 <template>
+  
   <FlameBackground>
     <div class="home-container">
       <header class="anime-header">
         <h1>🔥 煉獄さんと EГЭ</h1>
-        <p class="subtitle">「心を燃やせ！」 — Сожги своё сердце для экзамена</p>
+        <p class="subtitle">「心を燃やせ！」 — Зажги своё сердце для экзамена</p>
+        <router-link to="/admin" class="admin-link">⚙️ Панель управления</router-link>
       </header>
 
       <div class="subject-grid">
@@ -81,5 +83,23 @@ export default {
   max-width: 1200px;
   margin: 50px auto;
   padding: 0 20px;
+}
+
+.admin-link {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 8px 20px;
+  background: rgba(255, 69, 0, 0.2);
+  border: 1px solid #ff4500;
+  border-radius: 20px;
+  color: #ffa07a;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: 0.3s;
+}
+
+.admin-link:hover {
+  background: #ff4500;
+  color: #fff;
 }
 </style>

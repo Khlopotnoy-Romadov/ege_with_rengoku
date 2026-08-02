@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\SubjectController;
+use App\Http\Controllers\Api\TopicController;
+use App\Http\Controllers\Api\QuestionController;
+
 
 // Корневой маршрут
 Route::get('/', function () {
@@ -19,6 +22,28 @@ Route::get('/', function () {
 Route::prefix('api/v1')->group(function () {
     Route::get('/subjects', [SubjectController::class, 'index']);
     Route::get('/subjects/{slug}/full', [SubjectController::class, 'showFull']);
+});
+
+// Admin API маршруты (с защитой)
+// Admin API маршруты (с защитой)
+Route::prefix('api/admin')->middleware('admin')->group(function () {
+    // Предметы
+    Route::get('/subjects', [SubjectController::class, 'index']);
+    Route::post('/subjects', [SubjectController::class, 'store']);
+    Route::put('/subjects/{id}', [SubjectController::class, 'update']);
+    Route::delete('/subjects/{id}', [SubjectController::class, 'destroy']);
+    
+    // Темы
+    Route::get('/topics', [TopicController::class, 'index']);
+    Route::post('/topics', [TopicController::class, 'store']);
+    Route::put('/topics/{id}', [TopicController::class, 'update']);
+    Route::delete('/topics/{id}', [TopicController::class, 'destroy']);
+    
+    // Вопросы
+    Route::get('/questions', [QuestionController::class, 'index']);
+    Route::post('/questions', [QuestionController::class, 'store']);
+    Route::put('/questions/{id}', [QuestionController::class, 'update']);
+    Route::delete('/questions/{id}', [QuestionController::class, 'destroy']);
 });
 
 // CORS для всех OPTIONS запросов (должен быть последним)
