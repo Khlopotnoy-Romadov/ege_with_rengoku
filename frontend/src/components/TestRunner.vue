@@ -10,7 +10,8 @@
     <div class="question-block" v-if="currentQuestion">
       <p class="question-text">{{ currentQuestion.text }}</p>
       
-      <div class="options">
+      <!-- Тип вопроса: С выбором ответа -->
+      <div v-if="currentQuestion.question_type === 'choice' || !currentQuestion.question_type" class="options">
         <div 
           v-for="(option, idx) in currentQuestion.options" 
           :key="idx"
@@ -27,12 +28,30 @@
         </div>
       </div>
 
+      <!-- Тип вопроса: С вводом ответа -->
+      <div v-else class="input-answer">
+        <label for="userAnswer" class="input-label">✍️ Введите ваш ответ:</label>
+        <input 
+          id="userAnswer"
+          type="text" 
+          v-model="userInputAnswer" 
+          :disabled="showResult"
+          placeholder="Введите ответ..."
+          class="answer-input"
+          @keyup.enter="checkAnswer"
+        />
+      </div>
+
+      <!-- Результат -->
       <div v-if="showResult" class="result-feedback">
-        <div v-if="selectedOption === currentQuestion.correct" class="correct-feedback">
+        <div v-if="isAnswerCorrect" class="correct-feedback">
           ✅ 正解！ 「上手い！」 — Ренгоку хвалит тебя!
         </div>
         <div v-else class="wrong-feedback">
           ❌ 残念！ (Жаль!) Попробуй ещё раз.
+          <div class="correct-answer-display">
+            Правильный ответ: <strong>{{ currentQuestion.correct }}</strong>
+          </div>
           <span v-if="currentQuestion.hint" class="hint">
             💡 Подсказка Ренгоку: {{ currentQuestion.hint }}
           </span>
@@ -41,11 +60,14 @@
           {{ isLast ? '🔥 Показать результат' : 'Следующий вопрос →' }}
         </button>
       </div>
-      <button v-else class="btn-check" @click="checkAnswer" :disabled="!selectedOption">
+
+      <!-- Кнопка ответа -->
+      <button v-else class="btn-check" @click="checkAnswer" :disabled="!canAnswer">
         ⚔️ Ответить
       </button>
     </div>
 
+    <!-- Результаты -->
     <div v-if="isFinished" class="result-screen">
       <h2>🔥 結果 (Результат)</h2>
       <div class="score">
@@ -59,7 +81,7 @@
         💪 「よくやった！まだまだ強くなれる！」 — Хорошая работа! Ты можешь стать ещё сильнее!
       </p>
       <p class="score-message" v-else>
-        🔥 「心を燃やせ！もう一度挑戦だ！」 — Зажги своё сердце! Попробуй снова!
+        🔥 「心を燃やせ！もう一度挑戦だ！」 — Сожги своё сердце! Попробуй снова!
       </p>
       <button class="btn-retry" @click="$emit('finish')">🏠 Вернуться к темам</button>
     </div>
@@ -79,6 +101,7 @@ export default {
     return {
       currentIndex: 0,
       selectedOption: null,
+      userInputAnswer: '',
       showResult: false,
       score: 0,
       isFinished: false
@@ -90,6 +113,19 @@ export default {
     },
     isLast() {
       return this.currentIndex === this.topic.questions.length - 1;
+    },
+    canAnswer() {
+      if (this.currentQuestion?.question_type === 'input') {
+        return this.userInputAnswer.trim() !== '';
+      }
+      return this.selectedOption !== null;
+    },
+    isAnswerCorrect() {
+      if (this.currentQuestion?.question_type === 'input') {
+        // Сравниваем ответ пользователя с правильным (регистронезависимо)
+        return this.userInputAnswer.trim().toLowerCase() === this.currentQuestion.correct.trim().toLowerCase();
+      }
+      return this.selectedOption === this.currentQuestion?.correct;
     }
   },
   methods: {
@@ -98,9 +134,11 @@ export default {
       this.selectedOption = option;
     },
     checkAnswer() {
-      if (!this.selectedOption) return;
+      if (!this.canAnswer) return;
+      
       this.showResult = true;
-      if (this.selectedOption === this.currentQuestion.correct) {
+      
+      if (this.isAnswerCorrect) {
         this.score += this.currentQuestion.points || 1;
       }
     },
@@ -112,6 +150,7 @@ export default {
       }
       this.currentIndex++;
       this.selectedOption = null;
+      this.userInputAnswer = '';
       this.showResult = false;
     }
   }
@@ -161,6 +200,7 @@ export default {
   border-left: 4px solid #ff4500;
 }
 
+/* === Стили для вариантов ответов === */
 .options {
   display: flex;
   flex-direction: column;
@@ -206,6 +246,45 @@ export default {
   min-width: 28px;
 }
 
+/* === Стили для ввода ответа === */
+.input-answer {
+  margin: 20px 0 30px;
+}
+
+.input-label {
+  display: block;
+  color: #ffa07a;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.answer-input {
+  width: 100%;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 69, 0, 0.3);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.2rem;
+  transition: 0.3s;
+}
+
+.answer-input:focus {
+  outline: none;
+  border-color: #ff4500;
+  background: rgba(255, 69, 0, 0.1);
+}
+
+.answer-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.answer-input::placeholder {
+  color: #666;
+}
+
+/* === Кнопки === */
 .btn-check, .btn-next, .btn-retry {
   padding: 14px 40px;
   border: none;
@@ -238,6 +317,7 @@ export default {
   background: linear-gradient(135deg, #ff8c00, #ff4500);
   color: #fff;
   margin-top: 15px;
+  width: 100%;
 }
 
 .btn-next:hover {
@@ -245,6 +325,7 @@ export default {
   box-shadow: 0 0 30px rgba(255, 140, 0, 0.4);
 }
 
+/* === Результат === */
 .result-feedback {
   margin-top: 20px;
   padding: 20px;
@@ -262,6 +343,12 @@ export default {
   color: #ff9999;
 }
 
+.correct-answer-display {
+  margin-top: 8px;
+  color: #ffcc66;
+  font-size: 1.05rem;
+}
+
 .hint {
   display: block;
   margin-top: 10px;
@@ -272,6 +359,7 @@ export default {
   font-style: italic;
 }
 
+/* === Итоговый экран === */
 .result-screen {
   text-align: center;
   padding: 40px 20px;

@@ -25,9 +25,8 @@
           <button @click="openAddSubject" class="btn-add">➕ Добавить предмет</button>
         </div>
 
-        <!-- Форма добавления предмета -->
         <div v-if="showAddSubject" class="add-form">
-          <h3>➕ Добавить предмет</h3>
+          <h3>{{ editingSubject ? '✏️ Редактировать предмет' : '➕ Добавить предмет' }}</h3>
           <input v-model="newSubject.name" placeholder="Название предмета">
           <input v-model="newSubject.slug" placeholder="Slug (на английском)">
           <input v-model="newSubject.icon" placeholder="Иконка (эмодзи)">
@@ -37,7 +36,6 @@
           </div>
         </div>
 
-        <!-- Список предметов -->
         <div v-for="subject in subjects" :key="subject.id" class="admin-item">
           <span>{{ subject.icon }} {{ subject.name }} ({{ subject.slug }})</span>
           <div class="admin-actions">
@@ -54,9 +52,8 @@
           <button @click="openAddTopic" class="btn-add">➕ Добавить тему</button>
         </div>
 
-        <!-- Форма добавления темы -->
         <div v-if="showAddTopic" class="add-form">
-          <h3>➕ Добавить тему</h3>
+          <h3>{{ editingTopic ? '✏️ Редактировать тему' : '➕ Добавить тему' }}</h3>
           <select v-model="newTopic.subject_id">
             <option value="">Выберите предмет</option>
             <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
@@ -71,7 +68,6 @@
           </div>
         </div>
 
-        <!-- Список тем -->
         <div v-for="topic in topics" :key="topic.id" class="admin-item">
           <span>
             {{ getSubjectName(topic.subject_id) }} → {{ topic.name }}
@@ -91,34 +87,58 @@
           <button @click="openAddQuestion" class="btn-add">➕ Добавить вопрос</button>
         </div>
 
-        <!-- Форма добавления вопроса -->
         <div v-if="showAddQuestion" class="add-form">
-          <h3>➕ Добавить вопрос</h3>
+          <h3>{{ editingQuestion ? '✏️ Редактировать вопрос' : '➕ Добавить вопрос' }}</h3>
+
           <select v-model="newQuestion.topic_id">
             <option value="">Выберите тему</option>
             <option v-for="topic in topics" :key="topic.id" :value="topic.id">
               {{ getSubjectName(topic.subject_id) }} → {{ topic.name }}
             </option>
           </select>
+
           <textarea v-model="newQuestion.question_text" placeholder="Текст вопроса" rows="3"></textarea>
-          
-          <div class="options-group">
+
+          <!-- Тип вопроса -->
+          <div class="question-type">
+            <label>
+              <input type="radio" v-model="newQuestion.question_type" value="input" @change="updateQuestionType">
+              ✍️ С вводом ответа
+            </label>
+            <label>
+              <input type="radio" v-model="newQuestion.question_type" value="choice" @change="updateQuestionType">
+              📝 С выбором ответа
+            </label>
+          </div>
+
+          <!-- Варианты ответов (для типа choice) -->
+          <div v-if="newQuestion.question_type === 'choice'" class="options-group">
             <h4>Варианты ответов:</h4>
             <div v-for="(option, index) in newQuestion.options" :key="index" class="option-input">
               <span>{{ String.fromCharCode(65 + index) }}.</span>
               <input v-model="newQuestion.options[index]" :placeholder="`Вариант ${String.fromCharCode(65 + index)}`">
+              <button v-if="newQuestion.options.length > 2" @click="removeOption(index)"
+                class="btn-remove-option">✕</button>
             </div>
+            <button @click="addOption" class="btn-add-option">➕ Добавить вариант</button>
+
+            <select v-model="newQuestion.correct_answer" class="correct-select">
+              <option value="">Правильный ответ</option>
+              <option v-for="(_, index) in newQuestion.options" :key="index" :value="String.fromCharCode(65 + index)">
+                {{ String.fromCharCode(65 + index) }}
+              </option>
+            </select>
           </div>
-          
-          <select v-model="newQuestion.correct_answer">
-            <option value="">Правильный ответ</option>
-            <option v-for="(_, index) in newQuestion.options" :key="index" :value="String.fromCharCode(65 + index)">
-              {{ String.fromCharCode(65 + index) }}
-            </option>
-          </select>
+
+          <!-- Правильный ответ (для типа input) -->
+          <div v-if="newQuestion.question_type === 'input'" class="input-answer-group">
+            <h4>Правильный ответ:</h4>
+            <input v-model="newQuestion.correct_answer" placeholder="Введите правильный ответ">
+          </div>
+
           <input v-model="newQuestion.hint" placeholder="Подсказка (необязательно)">
           <input v-model.number="newQuestion.points" placeholder="Баллы (по умолчанию 1)" type="number" min="1">
-          
+
           <div class="form-actions">
             <button @click="saveQuestion" class="btn-save">💾 Сохранить</button>
             <button @click="showAddQuestion = false" class="btn-cancel">❌ Отмена</button>
@@ -128,10 +148,13 @@
         <!-- Список вопросов -->
         <div v-for="question in questions" :key="question.id" class="admin-item question-item">
           <div class="question-info">
+            <span class="question-type-badge">{{ question.question_type === 'input' ? '✍️ Ввод' : '📝 Выбор' }}</span>
             <strong>{{ getTopicName(question.topic_id) }}</strong>
             <span class="question-text">{{ question.question_text }}</span>
-            <span class="question-options">Варианты: {{ question.options?.join(', ') }}</span>
-            <span class="question-correct">✅ {{ question.correct_answer }}</span>
+            <span v-if="question.question_type === 'choice'" class="question-options">
+              Варианты: {{ Array.isArray(question.options) ? question.options.join(', ') : question.options }}
+            </span>
+            <span class="question-correct">✅ Ответ: {{ question.correct_answer }}</span>
           </div>
           <div class="admin-actions">
             <button @click="startEditQuestion(question)" class="btn-edit">✏️</button>
@@ -153,28 +176,29 @@ export default {
   data() {
     return {
       activeTab: 'subjects',
-      
+
       // Данные
       subjects: [],
       topics: [],
       questions: [],
-      
+
       // Форма предмета
       showAddSubject: false,
       newSubject: { name: '', slug: '', icon: '' },
       editingSubject: null,
-      
+
       // Форма темы
       showAddTopic: false,
       newTopic: { subject_id: '', name: '', description: '' },
       editingTopic: null,
-      
+
       // Форма вопроса
       showAddQuestion: false,
       newQuestion: {
         topic_id: '',
         question_text: '',
-        options: ['', '', '', ''],
+        question_type: 'input',
+        options: [],
         correct_answer: '',
         hint: '',
         points: 1
@@ -265,16 +289,15 @@ export default {
 
     async saveSubject() {
       try {
-        let response;
         if (this.editingSubject) {
-          response = await axios.put(
+          await axios.put(
             `${API_BASE}/subjects/${this.editingSubject.id}`,
             this.newSubject,
             { headers: { 'X-Admin-Token': 'rengoku2026' } }
           );
           alert('✅ Предмет обновлён!');
         } else {
-          response = await axios.post(
+          await axios.post(
             `${API_BASE}/subjects`,
             this.newSubject,
             { headers: { 'X-Admin-Token': 'rengoku2026' } }
@@ -368,6 +391,7 @@ export default {
       this.newQuestion = {
         topic_id: '',
         question_text: '',
+        question_type: 'input',
         options: ['', '', '', ''],
         correct_answer: '',
         hint: '',
@@ -375,12 +399,35 @@ export default {
       };
     },
 
+    updateQuestionType() {
+      this.newQuestion.correct_answer = '';
+      if (this.newQuestion.question_type === 'input') {
+        this.newQuestion.options = [];
+      } else {
+        this.newQuestion.options = ['', '', '', ''];
+      }
+    },
+
+    addOption() {
+      this.newQuestion.options.push('');
+    },
+
+    removeOption(index) {
+      this.newQuestion.options.splice(index, 1);
+      // Если удалили вариант, который был правильным ответом
+      if (this.newQuestion.correct_answer === String.fromCharCode(65 + index)) {
+        this.newQuestion.correct_answer = '';
+      }
+    },
+
     startEditQuestion(question) {
       this.editingQuestion = question;
+      const isChoice = question.question_type === 'choice' || !question.question_type;
       this.newQuestion = {
         topic_id: question.topic_id,
         question_text: question.question_text,
-        options: question.options || ['', '', '', ''],
+        question_type: isChoice ? 'choice' : 'input',
+        options: isChoice ? (Array.isArray(question.options) ? question.options : ['', '', '', '']) : [],
         correct_answer: question.correct_answer || '',
         hint: question.hint || '',
         points: question.points || 1
@@ -393,11 +440,26 @@ export default {
         const data = {
           topic_id: this.newQuestion.topic_id,
           question_text: this.newQuestion.question_text,
-          options: this.newQuestion.options.filter(o => o.trim() !== ''),
+          question_type: this.newQuestion.question_type,
           correct_answer: this.newQuestion.correct_answer,
           hint: this.newQuestion.hint,
           points: this.newQuestion.points || 1
         };
+
+        if (this.newQuestion.question_type === 'choice') {
+          const options = this.newQuestion.options.filter(o => o.trim() !== '');
+          if (options.length < 2) {
+            alert('Добавьте минимум 2 варианта ответа!');
+            return;
+          }
+          data.options = options;
+        } else {
+          data.options = [];
+          if (!data.correct_answer || data.correct_answer.trim() === '') {
+            alert('Введите правильный ответ!');
+            return;
+          }
+        }
 
         if (this.editingQuestion) {
           await axios.put(
@@ -414,11 +476,13 @@ export default {
           );
           alert('✅ Вопрос добавлен!');
         }
+
         this.showAddQuestion = false;
         this.editingQuestion = null;
         this.newQuestion = {
           topic_id: '',
           question_text: '',
+          question_type: 'choice',
           options: ['', '', '', ''],
           correct_answer: '',
           hint: '',
@@ -448,6 +512,84 @@ export default {
 </script>
 
 <style scoped>
+/* ... остальные стили ... */
+
+.question-type {
+  display: flex;
+  gap: 20px;
+  margin: 10px 0;
+  padding: 10px;
+  background: rgba(255, 69, 0, 0.05);
+  border-radius: 8px;
+}
+
+.question-type label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ddd;
+  cursor: pointer;
+}
+
+.question-type input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ff4500;
+}
+
+.btn-add-option {
+  background: rgba(255, 69, 0, 0.2);
+  border: 1px dashed #ff4500;
+  color: #ff8c5a;
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 5px;
+  transition: 0.3s;
+}
+
+.btn-add-option:hover {
+  background: rgba(255, 69, 0, 0.3);
+}
+
+.btn-remove-option {
+  background: none;
+  border: none;
+  color: #ff4444;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0 5px;
+}
+
+.btn-remove-option:hover {
+  color: #ff0000;
+}
+
+.correct-select {
+  margin-top: 10px;
+}
+
+.input-answer-group {
+  margin: 10px 0;
+}
+
+.input-answer-group h4 {
+  color: #ffa07a;
+  margin-bottom: 8px;
+}
+
+.question-type-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 69, 0, 0.2);
+  color: #ff8c5a;
+  margin-right: 10px;
+}
+
+/* Остальные стили из предыдущей версии */
 .admin-panel {
   background: rgba(10, 5, 3, 0.95);
   border-radius: 16px;
@@ -672,6 +814,7 @@ export default {
 
 .option-input input {
   margin-bottom: 0;
+  flex: 1;
 }
 
 .form-actions {

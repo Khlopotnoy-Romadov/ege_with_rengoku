@@ -12,7 +12,6 @@ class QuestionController extends Controller
     {
         $questions = Question::with('topic')->get();
         
-        // Преобразуем options из JSON в массив
         $questions = $questions->map(function ($question) {
             if (is_string($question->options)) {
                 $question->options = json_decode($question->options, true);
@@ -26,25 +25,41 @@ class QuestionController extends Controller
     public function store(Request $request)
     {
         try {
-            // Правильная валидация БЕЗ default
-            $validated = $request->validate([
+            // Базовая валидация
+            $rules = [
                 'topic_id' => 'required|exists:topics,id',
                 'question_text' => 'required|string',
-                'options' => 'required|array|min:2',
-                'correct_answer' => 'required|string|max:1',
+                'question_type' => 'required|in:choice,input',
+                'correct_answer' => 'required|string',
                 'hint' => 'nullable|string',
                 'points' => 'integer|min:1'
-            ]);
+            ];
 
-            // Преобразуем options в JSON
-            $validated['options'] = json_encode($validated['options']);
-            
-            // Если points не передан, ставим 1
+            // Для типа "choice" проверяем options
+            if ($request->question_type === 'choice') {
+                $rules['options'] = 'required|array|min:2';
+            } else {
+                // Для типа "input" options не обязательны
+                $rules['options'] = 'nullable|array';
+            }
+
+            $validated = $request->validate($rules);
+
+            // Если тип "input" — очищаем options
+            if ($validated['question_type'] === 'input') {
+                $validated['options'] = json_encode([]);
+            } else {
+                $validated['options'] = json_encode($validated['options']);
+            }
+
             if (!isset($validated['points'])) {
                 $validated['points'] = 1;
             }
 
             $question = Question::create($validated);
+            
+            $question->options = json_decode($question->options, true);
+            
             return response()->json($question, 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -64,20 +79,35 @@ class QuestionController extends Controller
         try {
             $question = Question::findOrFail($id);
             
-            $validated = $request->validate([
+            $rules = [
                 'topic_id' => 'sometimes|exists:topics,id',
                 'question_text' => 'sometimes|string',
-                'options' => 'sometimes|array|min:2',
-                'correct_answer' => 'sometimes|string|max:1',
+                'question_type' => 'sometimes|in:choice,input',
+                'correct_answer' => 'sometimes|string',
                 'hint' => 'nullable|string',
                 'points' => 'integer|min:1'
-            ]);
+            ];
+
+            if ($request->question_type === 'choice') {
+                $rules['options'] = 'sometimes|array|min:2';
+            } else {
+                $rules['options'] = 'nullable|array';
+            }
+
+            $validated = $request->validate($rules);
 
             if (isset($validated['options'])) {
-                $validated['options'] = json_encode($validated['options']);
+                if ($validated['question_type'] === 'input' || empty($validated['options'])) {
+                    $validated['options'] = json_encode([]);
+                } else {
+                    $validated['options'] = json_encode($validated['options']);
+                }
             }
 
             $question->update($validated);
+            
+            $question->options = json_decode($question->options, true);
+            
             return response()->json($question);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([

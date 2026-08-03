@@ -19,7 +19,6 @@ class SubjectController extends Controller
         try {
             $subject = Subject::with(['topics.questions'])->where('slug', $slug)->firstOrFail();
             
-            // Преобразуем данные для фронта
             $result = [
                 'id' => $subject->id,
                 'name' => $subject->name,
@@ -29,7 +28,6 @@ class SubjectController extends Controller
                         'name' => $topic->name,
                         'description' => $topic->description,
                         'questions' => $topic->questions->map(function ($question) {
-                            // Преобразуем options из JSON в массив
                             $options = $question->options;
                             if (is_string($options)) {
                                 $options = json_decode($options, true);
@@ -38,7 +36,8 @@ class SubjectController extends Controller
                             return [
                                 'id' => $question->id,
                                 'text' => $question->question_text,
-                                'options' => $options,
+                                'question_type' => $question->question_type ?? 'choice',
+                                'options' => $options ?? [],
                                 'correct' => $question->correct_answer,
                                 'hint' => $question->hint,
                                 'points' => $question->points,
