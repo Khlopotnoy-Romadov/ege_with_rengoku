@@ -4,19 +4,40 @@
       <h1>🔥 Панель управления</h1>
       <router-link to="/" class="btn-exit">🏠 На главную</router-link>
     </div>
-    
+
     <div class="admin-nav">
-      <button @click="activeTab = 'subjects'" :class="{ active: activeTab === 'subjects' }">
+      <button @click="switchTab('subjects')" :class="{ active: activeTab === 'subjects' }">
         📚 Предметы
       </button>
-      <button @click="activeTab = 'add'" class="btn-add" :class="{ active: activeTab === 'add' }">
-        ➕ Добавить
+      <button @click="switchTab('topics')" :class="{ active: activeTab === 'topics' }">
+        📝 Темы
+      </button>
+      <button @click="switchTab('questions')" :class="{ active: activeTab === 'questions' }">
+        ❓ Вопросы
       </button>
     </div>
 
     <div class="admin-content">
-      <!-- Список предметов -->
+      <!-- ==================== ПРЕДМЕТЫ ==================== -->
       <div v-if="activeTab === 'subjects'">
+        <div class="section-header">
+          <h2>📚 Предметы</h2>
+          <button @click="openAddSubject" class="btn-add">➕ Добавить предмет</button>
+        </div>
+
+        <!-- Форма добавления предмета -->
+        <div v-if="showAddSubject" class="add-form">
+          <h3>➕ Добавить предмет</h3>
+          <input v-model="newSubject.name" placeholder="Название предмета">
+          <input v-model="newSubject.slug" placeholder="Slug (на английском)">
+          <input v-model="newSubject.icon" placeholder="Иконка (эмодзи)">
+          <div class="form-actions">
+            <button @click="saveSubject" class="btn-save">💾 Сохранить</button>
+            <button @click="showAddSubject = false" class="btn-cancel">❌ Отмена</button>
+          </div>
+        </div>
+
+        <!-- Список предметов -->
         <div v-for="subject in subjects" :key="subject.id" class="admin-item">
           <span>{{ subject.icon }} {{ subject.name }} ({{ subject.slug }})</span>
           <div class="admin-actions">
@@ -26,17 +47,96 @@
         </div>
       </div>
 
-      <!-- Форма добавления/редактирования -->
-      <div v-if="activeTab === 'add'" class="add-form">
-        <h3>{{ editingSubject ? '✏️ Редактировать предмет' : '➕ Добавить предмет' }}</h3>
-        
-        <input v-model="formSubject.name" placeholder="Название предмета">
-        <input v-model="formSubject.slug" placeholder="Slug (на английском)">
-        <input v-model="formSubject.icon" placeholder="Иконка (эмодзи)">
-        
-        <div class="form-actions">
-          <button @click="saveSubject" class="btn-save">💾 Сохранить</button>
-          <button v-if="editingSubject" @click="cancelEdit" class="btn-cancel">❌ Отмена</button>
+      <!-- ==================== ТЕМЫ ==================== -->
+      <div v-if="activeTab === 'topics'">
+        <div class="section-header">
+          <h2>📝 Темы</h2>
+          <button @click="openAddTopic" class="btn-add">➕ Добавить тему</button>
+        </div>
+
+        <!-- Форма добавления темы -->
+        <div v-if="showAddTopic" class="add-form">
+          <h3>➕ Добавить тему</h3>
+          <select v-model="newTopic.subject_id">
+            <option value="">Выберите предмет</option>
+            <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
+              {{ subject.icon }} {{ subject.name }}
+            </option>
+          </select>
+          <input v-model="newTopic.name" placeholder="Название темы">
+          <input v-model="newTopic.description" placeholder="Описание (необязательно)">
+          <div class="form-actions">
+            <button @click="saveTopic" class="btn-save">💾 Сохранить</button>
+            <button @click="showAddTopic = false" class="btn-cancel">❌ Отмена</button>
+          </div>
+        </div>
+
+        <!-- Список тем -->
+        <div v-for="topic in topics" :key="topic.id" class="admin-item">
+          <span>
+            {{ getSubjectName(topic.subject_id) }} → {{ topic.name }}
+            <span v-if="topic.description" class="topic-desc">({{ topic.description }})</span>
+          </span>
+          <div class="admin-actions">
+            <button @click="startEditTopic(topic)" class="btn-edit">✏️</button>
+            <button @click="deleteTopic(topic.id)" class="btn-delete">🗑️</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== ВОПРОСЫ ==================== -->
+      <div v-if="activeTab === 'questions'">
+        <div class="section-header">
+          <h2>❓ Вопросы</h2>
+          <button @click="openAddQuestion" class="btn-add">➕ Добавить вопрос</button>
+        </div>
+
+        <!-- Форма добавления вопроса -->
+        <div v-if="showAddQuestion" class="add-form">
+          <h3>➕ Добавить вопрос</h3>
+          <select v-model="newQuestion.topic_id">
+            <option value="">Выберите тему</option>
+            <option v-for="topic in topics" :key="topic.id" :value="topic.id">
+              {{ getSubjectName(topic.subject_id) }} → {{ topic.name }}
+            </option>
+          </select>
+          <textarea v-model="newQuestion.question_text" placeholder="Текст вопроса" rows="3"></textarea>
+          
+          <div class="options-group">
+            <h4>Варианты ответов:</h4>
+            <div v-for="(option, index) in newQuestion.options" :key="index" class="option-input">
+              <span>{{ String.fromCharCode(65 + index) }}.</span>
+              <input v-model="newQuestion.options[index]" :placeholder="`Вариант ${String.fromCharCode(65 + index)}`">
+            </div>
+          </div>
+          
+          <select v-model="newQuestion.correct_answer">
+            <option value="">Правильный ответ</option>
+            <option v-for="(_, index) in newQuestion.options" :key="index" :value="String.fromCharCode(65 + index)">
+              {{ String.fromCharCode(65 + index) }}
+            </option>
+          </select>
+          <input v-model="newQuestion.hint" placeholder="Подсказка (необязательно)">
+          <input v-model.number="newQuestion.points" placeholder="Баллы (по умолчанию 1)" type="number" min="1">
+          
+          <div class="form-actions">
+            <button @click="saveQuestion" class="btn-save">💾 Сохранить</button>
+            <button @click="showAddQuestion = false" class="btn-cancel">❌ Отмена</button>
+          </div>
+        </div>
+
+        <!-- Список вопросов -->
+        <div v-for="question in questions" :key="question.id" class="admin-item question-item">
+          <div class="question-info">
+            <strong>{{ getTopicName(question.topic_id) }}</strong>
+            <span class="question-text">{{ question.question_text }}</span>
+            <span class="question-options">Варианты: {{ question.options?.join(', ') }}</span>
+            <span class="question-correct">✅ {{ question.correct_answer }}</span>
+          </div>
+          <div class="admin-actions">
+            <button @click="startEditQuestion(question)" class="btn-edit">✏️</button>
+            <button @click="deleteQuestion(question.id)" class="btn-delete">🗑️</button>
+          </div>
         </div>
       </div>
     </div>
@@ -53,19 +153,48 @@ export default {
   data() {
     return {
       activeTab: 'subjects',
+      
+      // Данные
       subjects: [],
+      topics: [],
+      questions: [],
+      
+      // Форма предмета
+      showAddSubject: false,
+      newSubject: { name: '', slug: '', icon: '' },
       editingSubject: null,
-      formSubject: {
-        name: '',
-        slug: '',
-        icon: ''
-      }
+      
+      // Форма темы
+      showAddTopic: false,
+      newTopic: { subject_id: '', name: '', description: '' },
+      editingTopic: null,
+      
+      // Форма вопроса
+      showAddQuestion: false,
+      newQuestion: {
+        topic_id: '',
+        question_text: '',
+        options: ['', '', '', ''],
+        correct_answer: '',
+        hint: '',
+        points: 1
+      },
+      editingQuestion: null
     };
   },
   mounted() {
-    this.loadSubjects();
+    this.loadAll();
   },
   methods: {
+    // === ЗАГРУЗКА ДАННЫХ ===
+    async loadAll() {
+      await Promise.all([
+        this.loadSubjects(),
+        this.loadTopics(),
+        this.loadQuestions()
+      ]);
+    },
+
     async loadSubjects() {
       try {
         const response = await axios.get(`${API_BASE}/subjects`, {
@@ -73,79 +202,243 @@ export default {
         });
         this.subjects = response.data;
       } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        alert('Ошибка загрузки предметов');
+        console.error('Ошибка загрузки предметов:', error);
       }
+    },
+
+    async loadTopics() {
+      try {
+        const response = await axios.get(`${API_BASE}/topics`, {
+          headers: { 'X-Admin-Token': 'rengoku2026' }
+        });
+        this.topics = response.data;
+      } catch (error) {
+        console.error('Ошибка загрузки тем:', error);
+      }
+    },
+
+    async loadQuestions() {
+      try {
+        const response = await axios.get(`${API_BASE}/questions`, {
+          headers: { 'X-Admin-Token': 'rengoku2026' }
+        });
+        this.questions = response.data;
+      } catch (error) {
+        console.error('Ошибка загрузки вопросов:', error);
+      }
+    },
+
+    // === ВСПОМОГАТЕЛЬНЫЕ ===
+    getSubjectName(id) {
+      const subject = this.subjects.find(s => s.id === id);
+      return subject ? subject.name : 'Неизвестный предмет';
+    },
+
+    getTopicName(id) {
+      const topic = this.topics.find(t => t.id === id);
+      return topic ? topic.name : 'Неизвестная тема';
+    },
+
+    switchTab(tab) {
+      this.activeTab = tab;
+      this.showAddSubject = false;
+      this.showAddTopic = false;
+      this.showAddQuestion = false;
+    },
+
+    // === ПРЕДМЕТЫ ===
+    openAddSubject() {
+      this.showAddSubject = true;
+      this.editingSubject = null;
+      this.newSubject = { name: '', slug: '', icon: '' };
     },
 
     startEditSubject(subject) {
       this.editingSubject = subject;
-      this.formSubject = {
+      this.newSubject = {
         name: subject.name,
         slug: subject.slug,
         icon: subject.icon || ''
       };
-      this.activeTab = 'add';
-    },
-
-    cancelEdit() {
-      this.editingSubject = null;
-      this.formSubject = { name: '', slug: '', icon: '' };
-      this.activeTab = 'subjects';
+      this.showAddSubject = true;
     },
 
     async saveSubject() {
       try {
+        let response;
         if (this.editingSubject) {
-          await axios.put(
+          response = await axios.put(
             `${API_BASE}/subjects/${this.editingSubject.id}`,
-            this.formSubject,
-            {
-              headers: {
-                'X-Admin-Token': 'rengoku2026',
-                'Content-Type': 'application/json'
-              }
-            }
+            this.newSubject,
+            { headers: { 'X-Admin-Token': 'rengoku2026' } }
           );
           alert('✅ Предмет обновлён!');
         } else {
-          await axios.post(
+          response = await axios.post(
             `${API_BASE}/subjects`,
-            this.formSubject,
-            {
-              headers: {
-                'X-Admin-Token': 'rengoku2026',
-                'Content-Type': 'application/json'
-              }
-            }
+            this.newSubject,
+            { headers: { 'X-Admin-Token': 'rengoku2026' } }
           );
           alert('✅ Предмет добавлен!');
         }
-        
-        this.formSubject = { name: '', slug: '', icon: '' };
+        this.showAddSubject = false;
         this.editingSubject = null;
-        this.activeTab = 'subjects';
+        this.newSubject = { name: '', slug: '', icon: '' };
         this.loadSubjects();
       } catch (error) {
-        console.error('Ошибка:', error);
-        if (error.response) {
-          alert(`Ошибка: ${error.response.status}\n${JSON.stringify(error.response.data, null, 2)}`);
-        } else {
-          alert('Ошибка при сохранении. Проверьте консоль.');
-        }
+        alert('Ошибка: ' + (error.response?.data?.message || error.message));
       }
     },
 
     async deleteSubject(id) {
-      if (confirm('Удалить предмет?')) {
+      if (confirm('Удалить предмет? Все темы и вопросы будут удалены!')) {
         try {
           await axios.delete(`${API_BASE}/subjects/${id}`, {
             headers: { 'X-Admin-Token': 'rengoku2026' }
           });
           alert('✅ Предмет удалён');
-          this.loadSubjects();
+          this.loadAll();
         } catch (error) {
-          console.error('Ошибка удаления:', error);
+          alert('Ошибка при удалении');
+        }
+      }
+    },
+
+    // === ТЕМЫ ===
+    openAddTopic() {
+      this.showAddTopic = true;
+      this.editingTopic = null;
+      this.newTopic = { subject_id: '', name: '', description: '' };
+    },
+
+    startEditTopic(topic) {
+      this.editingTopic = topic;
+      this.newTopic = {
+        subject_id: topic.subject_id,
+        name: topic.name,
+        description: topic.description || ''
+      };
+      this.showAddTopic = true;
+    },
+
+    async saveTopic() {
+      try {
+        if (this.editingTopic) {
+          await axios.put(
+            `${API_BASE}/topics/${this.editingTopic.id}`,
+            this.newTopic,
+            { headers: { 'X-Admin-Token': 'rengoku2026' } }
+          );
+          alert('✅ Тема обновлена!');
+        } else {
+          await axios.post(
+            `${API_BASE}/topics`,
+            this.newTopic,
+            { headers: { 'X-Admin-Token': 'rengoku2026' } }
+          );
+          alert('✅ Тема добавлена!');
+        }
+        this.showAddTopic = false;
+        this.editingTopic = null;
+        this.newTopic = { subject_id: '', name: '', description: '' };
+        this.loadTopics();
+      } catch (error) {
+        alert('Ошибка: ' + (error.response?.data?.message || error.message));
+      }
+    },
+
+    async deleteTopic(id) {
+      if (confirm('Удалить тему? Все вопросы будут удалены!')) {
+        try {
+          await axios.delete(`${API_BASE}/topics/${id}`, {
+            headers: { 'X-Admin-Token': 'rengoku2026' }
+          });
+          alert('✅ Тема удалена');
+          this.loadAll();
+        } catch (error) {
+          alert('Ошибка при удалении');
+        }
+      }
+    },
+
+    // === ВОПРОСЫ ===
+    openAddQuestion() {
+      this.showAddQuestion = true;
+      this.editingQuestion = null;
+      this.newQuestion = {
+        topic_id: '',
+        question_text: '',
+        options: ['', '', '', ''],
+        correct_answer: '',
+        hint: '',
+        points: 1
+      };
+    },
+
+    startEditQuestion(question) {
+      this.editingQuestion = question;
+      this.newQuestion = {
+        topic_id: question.topic_id,
+        question_text: question.question_text,
+        options: question.options || ['', '', '', ''],
+        correct_answer: question.correct_answer || '',
+        hint: question.hint || '',
+        points: question.points || 1
+      };
+      this.showAddQuestion = true;
+    },
+
+    async saveQuestion() {
+      try {
+        const data = {
+          topic_id: this.newQuestion.topic_id,
+          question_text: this.newQuestion.question_text,
+          options: this.newQuestion.options.filter(o => o.trim() !== ''),
+          correct_answer: this.newQuestion.correct_answer,
+          hint: this.newQuestion.hint,
+          points: this.newQuestion.points || 1
+        };
+
+        if (this.editingQuestion) {
+          await axios.put(
+            `${API_BASE}/questions/${this.editingQuestion.id}`,
+            data,
+            { headers: { 'X-Admin-Token': 'rengoku2026' } }
+          );
+          alert('✅ Вопрос обновлён!');
+        } else {
+          await axios.post(
+            `${API_BASE}/questions`,
+            data,
+            { headers: { 'X-Admin-Token': 'rengoku2026' } }
+          );
+          alert('✅ Вопрос добавлен!');
+        }
+        this.showAddQuestion = false;
+        this.editingQuestion = null;
+        this.newQuestion = {
+          topic_id: '',
+          question_text: '',
+          options: ['', '', '', ''],
+          correct_answer: '',
+          hint: '',
+          points: 1
+        };
+        this.loadQuestions();
+      } catch (error) {
+        alert('Ошибка: ' + (error.response?.data?.message || error.message));
+      }
+    },
+
+    async deleteQuestion(id) {
+      if (confirm('Удалить вопрос?')) {
+        try {
+          await axios.delete(`${API_BASE}/questions/${id}`, {
+            headers: { 'X-Admin-Token': 'rengoku2026' }
+          });
+          alert('✅ Вопрос удалён');
+          this.loadQuestions();
+        } catch (error) {
           alert('Ошибка при удалении');
         }
       }
@@ -160,7 +453,7 @@ export default {
   border-radius: 16px;
   padding: 30px;
   color: #fff;
-  max-width: 800px;
+  max-width: 900px;
   margin: 40px auto;
 }
 
@@ -222,6 +515,33 @@ export default {
   color: #fff;
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0 15px;
+}
+
+.section-header h2 {
+  color: #ff8c5a;
+}
+
+.btn-add {
+  padding: 8px 16px;
+  background: rgba(255, 69, 0, 0.3);
+  border: 1px solid #ff8c00;
+  color: #ff8c00;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-weight: 600;
+}
+
+.btn-add:hover {
+  background: #ff8c00;
+  color: #fff;
+}
+
 .admin-item {
   display: flex;
   justify-content: space-between;
@@ -232,12 +552,46 @@ export default {
   margin-bottom: 8px;
 }
 
+.question-item {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.question-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.question-text {
+  color: #f0e0d0;
+  font-size: 1.05rem;
+}
+
+.question-options {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.question-correct {
+  color: #66ff99;
+  font-size: 0.9rem;
+}
+
+.topic-desc {
+  color: #888;
+  font-size: 0.85rem;
+  margin-left: 8px;
+}
+
 .admin-actions {
   display: flex;
   gap: 8px;
 }
 
-.btn-edit, .btn-delete {
+.btn-edit,
+.btn-delete {
   border: none;
   background: transparent;
   cursor: pointer;
@@ -260,6 +614,7 @@ export default {
   padding: 20px;
   border-radius: 12px;
   border: 1px solid rgba(255, 69, 0, 0.2);
+  margin-bottom: 20px;
 }
 
 .add-form h3 {
@@ -267,7 +622,9 @@ export default {
   color: #ff8c5a;
 }
 
-.add-form input {
+.add-form input,
+.add-form select,
+.add-form textarea {
   display: block;
   width: 100%;
   padding: 10px;
@@ -279,16 +636,48 @@ export default {
   font-size: 1rem;
 }
 
-.add-form input:focus {
+.add-form input:focus,
+.add-form select:focus,
+.add-form textarea:focus {
   outline: none;
   border-color: #ff4500;
   background: rgba(255, 69, 0, 0.1);
 }
 
+.add-form select option {
+  background: #1b0e0b;
+}
+
+.options-group {
+  margin: 10px 0;
+}
+
+.options-group h4 {
+  color: #ffa07a;
+  margin-bottom: 8px;
+}
+
+.option-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.option-input span {
+  color: #ff8c5a;
+  font-weight: 700;
+  min-width: 25px;
+}
+
+.option-input input {
+  margin-bottom: 0;
+}
+
 .form-actions {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 
 .btn-save {
