@@ -5,7 +5,7 @@
         <div class="header-content">
           <div class="header-left">
             <h1>🔥 煉獄さんと EГЭ</h1>
-            <p class="subtitle">「心を燃やせ！」 — Сожги своё сердце для экзамена</p>
+            <p class="subtitle">「心を燃やせ！」 — Зажги своё сердце для экзамена</p>
           </div>
           <div class="header-right">
             <MentorSelector />
