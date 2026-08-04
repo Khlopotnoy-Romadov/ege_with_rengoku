@@ -2,9 +2,11 @@
   <div class="admin-panel">
     <div class="admin-header">
       <h1>🔥 Панель управления</h1>
-      <router-link to="/" class="btn-exit">🏠 На главную</router-link>
+      <div class="header-actions">
+        <ThemeToggle />
+        <router-link to="/" class="btn-exit">🏠 На главную</router-link>
+      </div>
     </div>
-
     <div class="admin-nav">
       <button @click="switchTab('subjects')" :class="{ active: activeTab === 'subjects' }">
         📚 Предметы
@@ -89,16 +91,16 @@
 
         <div v-if="showAddQuestion" class="add-form">
           <h3>{{ editingQuestion ? '✏️ Редактировать вопрос' : '➕ Добавить вопрос' }}</h3>
-          
+
           <select v-model="newQuestion.topic_id">
             <option value="">Выберите тему</option>
             <option v-for="topic in topics" :key="topic.id" :value="topic.id">
               {{ getSubjectName(topic.subject_id) }} → {{ topic.name }}
             </option>
           </select>
-          
+
           <textarea v-model="newQuestion.question_text" placeholder="Текст вопроса" rows="3"></textarea>
-          
+
           <!-- Тип вопроса -->
           <div class="question-type">
             <label>
@@ -127,10 +129,11 @@
             <div v-for="(option, index) in newQuestion.options" :key="index" class="option-input">
               <span>{{ String.fromCharCode(65 + index) }}.</span>
               <input v-model="newQuestion.options[index]" :placeholder="`Вариант ${String.fromCharCode(65 + index)}`">
-              <button v-if="newQuestion.options.length > 2" @click="removeOption(index)" class="btn-remove-option">✕</button>
+              <button v-if="newQuestion.options.length > 2" @click="removeOption(index)"
+                class="btn-remove-option">✕</button>
             </div>
             <button @click="addOption" class="btn-add-option">➕ Добавить вариант</button>
-            
+
             <select v-model="newQuestion.correct_answer" class="correct-select">
               <option value="">Правильный ответ</option>
               <option v-for="(_, index) in newQuestion.options" :key="index" :value="String.fromCharCode(65 + index)">
@@ -173,7 +176,8 @@
 
             <div v-if="newQuestion.media_type !== 'none'" class="media-fields">
               <input v-model="newQuestion.media_url" placeholder="URL файла/изображения (например: /uploads/image.png)">
-              <textarea v-model="newQuestion.media_description" placeholder="Описание медиа (для изображений)" rows="2"></textarea>
+              <textarea v-model="newQuestion.media_description" placeholder="Описание медиа (для изображений)"
+                rows="2"></textarea>
               <small class="media-hint">
                 💡 Для файлов из заданий: загрузите файлы в папку public/uploads/
               </small>
@@ -194,7 +198,8 @@
             <strong>{{ getTopicName(question.topic_id) }}</strong>
             <span class="question-text">{{ question.question_text }}</span>
             <span v-if="question.media_type && question.media_type !== 'none'" class="media-badge">
-              📎 {{ question.media_type === 'image' ? 'Изображение' : question.media_type === 'file' ? 'Файл' : 'Изображение + Файл' }}
+              📎 {{ question.media_type === 'image' ? 'Изображение' : question.media_type === 'file' ? 'Файл' :
+              'Изображение + Файл' }}
             </span>
             <span v-if="question.question_type === 'choice'" class="question-options">
               Варианты: {{ Array.isArray(question.options) ? question.options.join(', ') : question.options }}
@@ -213,29 +218,33 @@
 
 <script>
 import axios from 'axios';
+import ThemeToggle from '@/components/ThemeToggle.vue';
 
 const API_BASE = 'http://127.0.0.1:8000/api/admin';
 
 export default {
   name: 'AdminPanel',
+
+  components: {ThemeToggle},
+
   data() {
     return {
       activeTab: 'subjects',
-      
+
       subjects: [],
       topics: [],
       questions: [],
-      
+
       // Форма предмета
       showAddSubject: false,
       newSubject: { name: '', slug: '', icon: '' },
       editingSubject: null,
-      
+
       // Форма темы
       showAddTopic: false,
       newTopic: { subject_id: '', name: '', description: '' },
       editingTopic: null,
-      
+
       // Форма вопроса
       showAddQuestion: false,
       newQuestion: {
@@ -542,7 +551,7 @@ export default {
           );
           alert('✅ Вопрос добавлен!');
         }
-        
+
         this.showAddQuestion = false;
         this.editingQuestion = null;
         this.newQuestion = {
@@ -980,5 +989,11 @@ export default {
 
 .btn-cancel:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 </style>

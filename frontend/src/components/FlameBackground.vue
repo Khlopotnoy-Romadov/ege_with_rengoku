@@ -9,12 +9,12 @@
 .flame-container {
   position: relative;
   min-height: 100vh;
-  background: radial-gradient(ellipse at bottom, #1b0e0b, #0a0503);
+  background: var(--bg-primary);
   overflow: hidden;
   padding: 20px;
+  transition: background 0.3s ease;
 }
 
-/* Анимированные частицы огня */
 .flame-particles {
   position: absolute;
   width: 6px;
@@ -57,16 +57,16 @@
   }
 }
 
-/* Японский орнамент поверх фона (имитация катаны) */
 .flame-container::before {
   content: "燃";
   position: absolute;
   top: 20px;
   right: 40px;
   font-size: 120px;
-  color: rgba(255, 69, 0, 0.03);
+  color: rgba(255, 69, 0, var(--flame-opacity, 0.05));
   font-family: 'Noto Sans JP', sans-serif;
   transform: rotate(15deg);
   pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 </style>

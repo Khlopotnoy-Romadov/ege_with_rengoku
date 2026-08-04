@@ -22,33 +22,33 @@ export default {
 
 <style scoped>
 .subject-card {
-  background: rgba(30, 10, 5, 0.85);
+  background: var(--bg-card);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 69, 0, 0.3);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 30px 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 4px 30px rgba(255, 69, 0, 0.1);
+  box-shadow: 0 4px 30px var(--shadow-color);
 }
 
 .subject-card:hover {
   transform: translateY(-10px) scale(1.02);
   border-color: #ff4500;
-  box-shadow: 0 8px 60px rgba(255, 69, 0, 0.4);
+  box-shadow: 0 8px 60px rgba(255, 69, 0, 0.25);
 }
 
 .subject-icon {
   font-size: 4rem;
   margin-bottom: 15px;
-  filter: drop-shadow(0 0 20px rgba(255, 69, 0, 0.3));
+  filter: drop-shadow(0 0 20px rgba(255, 69, 0, 0.2));
 }
 
 .subject-card h3 {
   font-size: 1.8rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
   letter-spacing: 2px;
 }
 
