@@ -39,6 +39,7 @@ export default {
   --glass-border: rgba(180, 100, 60, 0.15);
   --topic-bg: rgba(255, 255, 255, 0.85);
   --test-bg: rgba(255, 255, 255, 0.9);
+  --mentor-color: #ff4500;
 }
 
 /* === ТЕМНАЯ ТЕМА === */
@@ -61,6 +62,7 @@ export default {
   --glass-border: rgba(255, 69, 0, 0.15);
   --topic-bg: rgba(20, 8, 4, 0.8);
   --test-bg: rgba(10, 5, 3, 0.9);
+  --mentor-color: #ff4500;
 }
 
 body {

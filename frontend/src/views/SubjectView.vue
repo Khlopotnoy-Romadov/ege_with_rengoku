@@ -41,6 +41,7 @@ import ThemeToggle from '@/components/ThemeToggle.vue';
 export default {
   name: 'SubjectView',
   components: { FlameBackground, TestRunner, ThemeToggle },
+  inject: ['mentor'],
   data() {
     return {
       subjectData: { topics: [], name: '' },

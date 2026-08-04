@@ -8,11 +8,26 @@
             <p class="subtitle">「心を燃やせ！」 — Сожги своё сердце для экзамена</p>
           </div>
           <div class="header-right">
+            <MentorSelector />
             <ThemeToggle />
             <router-link to="/admin" class="admin-link">⚙️ Панель управления</router-link>
           </div>
         </div>
       </header>
+
+      <div class="welcome-mentor" v-if="mentor.current">
+        <img 
+          v-if="mentor.current.avatar" 
+          :src="mentor.current.avatar" 
+          :alt="mentor.current.name"
+          class="welcome-avatar"
+        />
+        <span v-else class="welcome-emoji">{{ mentor.current.emoji }}</span>
+        <span class="welcome-text">
+          Сегодня с тобой занимается <strong>{{ mentor.current.name }}</strong>
+          <span class="welcome-quote">«{{ mentor.current.quote }}»</span>
+        </span>
+      </div>
 
       <div class="subject-grid">
         <SubjectCard
@@ -31,10 +46,12 @@ import { mapSubjects } from '@/api/subject';
 import FlameBackground from '@/components/FlameBackground.vue';
 import SubjectCard from '@/components/SubjectCard.vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
+import MentorSelector from '@/components/MentorSelector.vue';
 
 export default {
   name: 'Home',
-  components: { FlameBackground, SubjectCard, ThemeToggle },
+  components: { FlameBackground, SubjectCard, ThemeToggle, MentorSelector },
+  inject: ['mentor'],
   data() {
     return {
       subjects: []
@@ -42,6 +59,7 @@ export default {
   },
   async created() {
     this.subjects = await mapSubjects();
+    this.mentor.load();
   },
   methods: {
     navigateToSubject(slug) {
@@ -52,15 +70,15 @@ export default {
 </script>
 
 <style scoped>
+/* ... все стили как раньше ... */
 .home-container {
   position: relative;
   z-index: 1;
 }
 
 .anime-header {
-  text-align: center;
-  padding: 40px 0 30px;
-  border-bottom: 2px solid var(--border-color);
+  padding: 40px 0 20px;
+  border-bottom: 2px solid var(--border-color, rgba(255, 69, 0, 0.2));
 }
 
 .header-content {
@@ -82,14 +100,14 @@ export default {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .anime-header h1 {
   font-size: 2.8rem;
   font-weight: 700;
-  text-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
+  text-shadow: 0 0 30px rgba(255, 69, 0, 0.2);
   background: linear-gradient(45deg, #ff4500, #ff8c00);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -98,7 +116,7 @@ export default {
 }
 
 .subtitle {
-  color: var(--text-secondary);
+  color: var(--text-secondary, #d4a088);
   font-size: 1.1rem;
   font-style: italic;
   margin-top: 5px;
@@ -107,10 +125,10 @@ export default {
 
 .admin-link {
   padding: 8px 16px;
-  background: var(--button-bg);
-  border: 1px solid var(--border-color);
+  background: var(--button-bg, rgba(255, 69, 0, 0.1));
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.2));
   border-radius: 20px;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #ffa07a);
   text-decoration: none;
   font-size: 0.9rem;
   transition: 0.3s;
@@ -123,12 +141,55 @@ export default {
   border-color: #ff4500;
 }
 
+.welcome-mentor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 15px 20px;
+  margin: 20px auto 30px;
+  max-width: 600px;
+  background: var(--bg-card, rgba(255, 69, 0, 0.04));
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.08));
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.welcome-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ff4500;
+}
+
+.welcome-emoji {
+  font-size: 2.5rem;
+}
+
+.welcome-text {
+  font-size: 1.05rem;
+  color: var(--text-primary, #f0e0d0);
+}
+
+.welcome-text strong {
+  color: #ff8c5a;
+}
+
+.welcome-quote {
+  display: block;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--text-muted, #888);
+  margin-top: 2px;
+}
+
 .subject-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 30px;
   max-width: 1200px;
-  margin: 50px auto;
+  margin: 30px auto 50px;
   padding: 0 20px;
 }
 
@@ -149,6 +210,12 @@ export default {
   
   .header-right {
     justify-content: center;
+  }
+  
+  .welcome-mentor {
+    flex-direction: column;
+    text-align: center;
+    padding: 15px;
   }
 }
 </style>
