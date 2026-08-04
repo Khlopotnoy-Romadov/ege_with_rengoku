@@ -8,7 +8,7 @@
     </div>
 
     <div class="question-block" v-if="currentQuestion">
-      <!-- Медиа-контент (изображения и файлы) -->
+      <!-- Медиа-контент -->
       <div v-if="currentQuestion.media_type && currentQuestion.media_type !== 'none'" class="media-container">
         <div v-if="currentQuestion.media_type === 'image' || currentQuestion.media_type === 'both'" class="media-image">
           <img :src="currentQuestion.media_url" :alt="currentQuestion.media_description || 'Схема к заданию'" />
@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <!-- Тип вопроса: С вводом ответа (число или текст) -->
+      <!-- Тип вопроса: С вводом ответа -->
       <div v-else class="input-answer">
         <label class="input-label">
           <span v-if="currentQuestion.answer_type === 'number'">🔢 Введите число:</span>
@@ -69,12 +69,10 @@
         />
       </div>
 
-      <!-- Кнопка ответа -->
       <button v-if="!showResult" class="btn-check" @click="checkAnswer" :disabled="!canAnswer">
         ⚔️ Ответить
       </button>
 
-      <!-- Результат -->
       <div v-if="showResult" class="result-feedback">
         <div v-if="isAnswerCorrect" class="correct-feedback">
           ✅ 正解！ 「上手い！」 — Ренгоку хвалит тебя!
@@ -94,7 +92,6 @@
       </div>
     </div>
 
-    <!-- Результаты -->
     <div v-if="isFinished" class="result-screen">
       <h2>🔥 結果 (Результат)</h2>
       <div class="score">
@@ -193,21 +190,23 @@ export default {
 
 <style scoped>
 .test-runner {
-  background: rgba(10, 5, 3, 0.9);
+  background: var(--test-bg, rgba(10, 5, 3, 0.9));
   backdrop-filter: blur(8px);
   border-radius: 20px;
   padding: 30px;
-  border: 1px solid rgba(255, 69, 0, 0.3);
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.15));
   margin-top: 20px;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .test-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid rgba(255, 69, 0, 0.2);
+  border-bottom: 2px solid var(--border-color, rgba(255, 69, 0, 0.15));
   padding-bottom: 15px;
   margin-bottom: 25px;
+  transition: border-color 0.3s ease;
 }
 
 .test-header h3 {
@@ -216,7 +215,7 @@ export default {
 }
 
 .progress {
-  background: rgba(255, 69, 0, 0.2);
+  background: var(--button-bg, rgba(255, 69, 0, 0.15));
   padding: 6px 18px;
   border-radius: 30px;
   font-weight: 600;
@@ -227,20 +226,20 @@ export default {
   font-size: 1.4rem;
   line-height: 1.6;
   margin-bottom: 30px;
-  color: #f0e0d0;
+  color: var(--text-primary, #f0e0d0);
   padding: 15px;
-  background: rgba(255, 69, 0, 0.05);
+  background: var(--bg-card, rgba(255, 69, 0, 0.03));
   border-radius: 12px;
   border-left: 4px solid #ff4500;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
-/* === Медиа-контент === */
 .media-container {
   margin-bottom: 20px;
   padding: 15px;
-  background: rgba(0, 200, 255, 0.05);
+  background: rgba(0, 200, 255, 0.03);
   border-radius: 12px;
-  border: 1px solid rgba(0, 200, 255, 0.1);
+  border: 1px solid rgba(0, 200, 255, 0.08);
 }
 
 .media-image img {
@@ -249,7 +248,7 @@ export default {
 }
 
 .media-caption {
-  color: #88ccdd;
+  color: var(--text-secondary, #88ccdd);
   font-size: 0.95rem;
   margin-top: 8px;
   text-align: center;
@@ -258,10 +257,10 @@ export default {
 .btn-download {
   display: inline-block;
   padding: 10px 20px;
-  background: rgba(255, 69, 0, 0.2);
-  border: 1px solid #ff4500;
+  background: var(--button-bg, rgba(255, 69, 0, 0.15));
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.2));
   border-radius: 8px;
-  color: #ffa07a;
+  color: var(--text-secondary, #ffa07a);
   text-decoration: none;
   transition: 0.3s;
 }
@@ -269,9 +268,9 @@ export default {
 .btn-download:hover {
   background: #ff4500;
   color: #fff;
+  border-color: #ff4500;
 }
 
-/* === Стили для вариантов ответов === */
 .options {
   display: flex;
   flex-direction: column;
@@ -281,34 +280,34 @@ export default {
 
 .option-item {
   padding: 14px 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input, rgba(255, 255, 255, 0.03));
+  border: 2px solid var(--border-color, rgba(255, 255, 255, 0.08));
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s;
   display: flex;
   gap: 12px;
-  color: #ddd;
+  color: var(--text-primary, #ddd);
 }
 
 .option-item:hover:not(.correct):not(.wrong) {
-  background: rgba(255, 69, 0, 0.1);
+  background: rgba(255, 69, 0, 0.08);
   border-color: #ff4500;
 }
 
 .option-item.selected {
   border-color: #ff8c00;
-  background: rgba(255, 140, 0, 0.15);
+  background: rgba(255, 140, 0, 0.12);
 }
 
 .option-item.correct {
   border-color: #00cc66;
-  background: rgba(0, 204, 102, 0.2);
+  background: rgba(0, 204, 102, 0.15);
 }
 
 .option-item.wrong {
   border-color: #ff3333;
-  background: rgba(255, 51, 51, 0.2);
+  background: rgba(255, 51, 51, 0.12);
 }
 
 .option-label {
@@ -317,14 +316,13 @@ export default {
   min-width: 28px;
 }
 
-/* === Стили для ввода ответа === */
 .input-answer {
   margin: 20px 0 30px;
 }
 
 .input-label {
   display: block;
-  color: #ffa07a;
+  color: var(--text-secondary, #ffa07a);
   font-size: 1.1rem;
   margin-bottom: 10px;
 }
@@ -332,10 +330,10 @@ export default {
 .answer-input {
   width: 100%;
   padding: 14px 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 69, 0, 0.3);
+  background: var(--bg-input, rgba(255, 255, 255, 0.03));
+  border: 2px solid var(--border-color, rgba(255, 69, 0, 0.15));
   border-radius: 12px;
-  color: #fff;
+  color: var(--text-primary, #fff);
   font-size: 1.2rem;
   transition: 0.3s;
 }
@@ -343,20 +341,21 @@ export default {
 .answer-input:focus {
   outline: none;
   border-color: #ff4500;
-  background: rgba(255, 69, 0, 0.1);
+  background: rgba(255, 69, 0, 0.05);
 }
 
 .answer-input:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .answer-input::placeholder {
-  color: #666;
+  color: var(--text-muted, #666);
 }
 
-/* === Кнопки === */
-.btn-check, .btn-next, .btn-retry {
+.btn-check,
+.btn-next,
+.btn-retry {
   padding: 14px 40px;
   border: none;
   border-radius: 50px;
@@ -376,7 +375,7 @@ export default {
 
 .btn-check:hover:not(:disabled) {
   transform: scale(1.02);
-  box-shadow: 0 0 30px rgba(255, 69, 0, 0.5);
+  box-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
 }
 
 .btn-check:disabled {
@@ -393,15 +392,15 @@ export default {
 
 .btn-next:hover {
   transform: scale(1.02);
-  box-shadow: 0 0 30px rgba(255, 140, 0, 0.4);
+  box-shadow: 0 0 30px rgba(255, 140, 0, 0.3);
 }
 
-/* === Результат === */
 .result-feedback {
   margin-top: 20px;
   padding: 20px;
   border-radius: 12px;
-  background: rgba(0,0,0,0.3);
+  background: var(--bg-card, rgba(0, 0, 0, 0.2));
+  transition: background 0.3s ease;
 }
 
 .correct-feedback {
@@ -424,13 +423,12 @@ export default {
   display: block;
   margin-top: 10px;
   padding: 12px;
-  background: rgba(255, 69, 0, 0.1);
+  background: rgba(255, 69, 0, 0.06);
   border-radius: 8px;
   color: #ffb08a;
   font-style: italic;
 }
 
-/* === Итоговый экран === */
 .result-screen {
   text-align: center;
   padding: 40px 20px;
@@ -449,30 +447,31 @@ export default {
 
 .score-number {
   color: #ff4500;
-  text-shadow: 0 0 40px rgba(255, 69, 0, 0.5);
+  text-shadow: 0 0 40px rgba(255, 69, 0, 0.2);
 }
 
 .score-total {
-  color: #888;
+  color: var(--text-muted, #888);
   font-size: 2.5rem;
 }
 
 .score-message {
   margin: 25px 0;
   font-size: 1.3rem;
-  color: #f0d8c8;
+  color: var(--text-secondary, #f0d8c8);
   font-style: italic;
 }
 
 .btn-retry {
-  background: rgba(255, 69, 0, 0.2);
-  border: 2px solid #ff4500;
-  color: #ff8c5a;
+  background: var(--button-bg, rgba(255, 69, 0, 0.15));
+  border: 2px solid var(--border-color, rgba(255, 69, 0, 0.2));
+  color: var(--text-secondary, #ff8c5a);
   padding: 12px 40px;
 }
 
 .btn-retry:hover {
   background: #ff4500;
   color: #fff;
+  border-color: #ff4500;
 }
 </style>

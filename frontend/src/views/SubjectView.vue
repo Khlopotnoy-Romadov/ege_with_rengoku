@@ -1,7 +1,10 @@
 <template>
   <FlameBackground>
     <div class="subject-view">
-      <button class="btn-back" @click="$router.push('/')">← 戻る (Назад)</button>
+      <div class="view-header">
+        <button class="btn-back" @click="$router.push('/')">← 戻る (Назад)</button>
+        <ThemeToggle />
+      </div>
       
       <h2 class="subject-title">{{ subjectData.name }}</h2>
       
@@ -20,7 +23,6 @@
         </div>
       </div>
 
-      <!-- Компонент прохождения теста -->
       <TestRunner 
         v-else
         :topic="currentTopic"
@@ -31,13 +33,14 @@
 </template>
 
 <script>
-import { fetchSubject } from '../api/subject.js';
-import FlameBackground from '../components/FlameBackground.vue'; 
-import TestRunner from '../components/TestRunner.vue'; 
+import { fetchSubject } from '@/api/subject';
+import FlameBackground from '@/components/FlameBackground.vue';
+import TestRunner from '@/components/TestRunner.vue';
+import ThemeToggle from '@/components/ThemeToggle.vue';
 
 export default {
   name: 'SubjectView',
-  components: { FlameBackground, TestRunner },
+  components: { FlameBackground, TestRunner, ThemeToggle },
   data() {
     return {
       subjectData: { topics: [], name: '' },
@@ -66,13 +69,20 @@ export default {
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
-  color: #fff;
+  color: var(--text-primary);
+}
+
+.view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .btn-back {
-  background: rgba(255, 69, 0, 0.2);
-  border: 1px solid #ff4500;
-  color: #ffa07a;
+  background: var(--button-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
   padding: 10px 25px;
   border-radius: 30px;
   cursor: pointer;
@@ -84,14 +94,15 @@ export default {
 .btn-back:hover {
   background: #ff4500;
   color: #fff;
-  box-shadow: 0 0 30px rgba(255, 69, 0, 0.4);
+  border-color: #ff4500;
+  box-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
 }
 
 .subject-title {
   font-size: 2.8rem;
   margin: 30px 0 40px;
   text-align: center;
-  text-shadow: 0 0 40px rgba(255, 69, 0, 0.3);
+  text-shadow: 0 0 40px rgba(255, 69, 0, 0.2);
   background: linear-gradient(135deg, #ff6a33, #ff4500);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -105,20 +116,20 @@ export default {
 }
 
 .topic-card {
-  background: rgba(20, 8, 4, 0.8);
+  background: var(--topic-bg, rgba(20, 8, 4, 0.8));
   backdrop-filter: blur(4px);
   border-left: 6px solid #ff4500;
   border-radius: 12px;
   padding: 25px 30px;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 20px var(--shadow-color, rgba(0,0,0,0.3));
 }
 
 .topic-card:hover {
-  background: rgba(40, 16, 8, 0.9);
+  background: var(--bg-card-hover, rgba(40, 16, 8, 0.9));
   transform: translateX(12px);
-  box-shadow: 0 0 40px rgba(255, 69, 0, 0.2);
+  box-shadow: 0 0 40px rgba(255, 69, 0, 0.15);
 }
 
 .topic-info h3 {
@@ -128,13 +139,13 @@ export default {
 }
 
 .topic-info p {
-  color: #d4a088;
+  color: var(--text-secondary);
   margin-bottom: 10px;
 }
 
 .question-count {
   display: inline-block;
-  background: rgba(255, 69, 0, 0.2);
+  background: var(--button-bg);
   padding: 4px 16px;
   border-radius: 20px;
   font-size: 0.9rem;

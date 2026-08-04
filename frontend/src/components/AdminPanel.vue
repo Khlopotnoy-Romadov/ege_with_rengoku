@@ -7,6 +7,7 @@
         <router-link to="/" class="btn-exit">🏠 На главную</router-link>
       </div>
     </div>
+
     <div class="admin-nav">
       <button @click="switchTab('subjects')" :class="{ active: activeTab === 'subjects' }">
         📚 Предметы
@@ -91,16 +92,16 @@
 
         <div v-if="showAddQuestion" class="add-form">
           <h3>{{ editingQuestion ? '✏️ Редактировать вопрос' : '➕ Добавить вопрос' }}</h3>
-
+          
           <select v-model="newQuestion.topic_id">
             <option value="">Выберите тему</option>
             <option v-for="topic in topics" :key="topic.id" :value="topic.id">
               {{ getSubjectName(topic.subject_id) }} → {{ topic.name }}
             </option>
           </select>
-
+          
           <textarea v-model="newQuestion.question_text" placeholder="Текст вопроса" rows="3"></textarea>
-
+          
           <!-- Тип вопроса -->
           <div class="question-type">
             <label>
@@ -129,11 +130,10 @@
             <div v-for="(option, index) in newQuestion.options" :key="index" class="option-input">
               <span>{{ String.fromCharCode(65 + index) }}.</span>
               <input v-model="newQuestion.options[index]" :placeholder="`Вариант ${String.fromCharCode(65 + index)}`">
-              <button v-if="newQuestion.options.length > 2" @click="removeOption(index)"
-                class="btn-remove-option">✕</button>
+              <button v-if="newQuestion.options.length > 2" @click="removeOption(index)" class="btn-remove-option">✕</button>
             </div>
             <button @click="addOption" class="btn-add-option">➕ Добавить вариант</button>
-
+            
             <select v-model="newQuestion.correct_answer" class="correct-select">
               <option value="">Правильный ответ</option>
               <option v-for="(_, index) in newQuestion.options" :key="index" :value="String.fromCharCode(65 + index)">
@@ -152,7 +152,7 @@
           <input v-model="newQuestion.hint" placeholder="Подсказка (необязательно)">
           <input v-model.number="newQuestion.points" placeholder="Баллы (по умолчанию 1)" type="number" min="1">
 
-          <!-- Медиа-контент (только для админа) -->
+          <!-- Медиа-контент -->
           <div class="media-group">
             <h4>📎 Прикреплённые файлы/изображения:</h4>
             <div class="media-type-select">
@@ -176,8 +176,7 @@
 
             <div v-if="newQuestion.media_type !== 'none'" class="media-fields">
               <input v-model="newQuestion.media_url" placeholder="URL файла/изображения (например: /uploads/image.png)">
-              <textarea v-model="newQuestion.media_description" placeholder="Описание медиа (для изображений)"
-                rows="2"></textarea>
+              <textarea v-model="newQuestion.media_description" placeholder="Описание медиа (для изображений)" rows="2"></textarea>
               <small class="media-hint">
                 💡 Для файлов из заданий: загрузите файлы в папку public/uploads/
               </small>
@@ -198,8 +197,7 @@
             <strong>{{ getTopicName(question.topic_id) }}</strong>
             <span class="question-text">{{ question.question_text }}</span>
             <span v-if="question.media_type && question.media_type !== 'none'" class="media-badge">
-              📎 {{ question.media_type === 'image' ? 'Изображение' : question.media_type === 'file' ? 'Файл' :
-              'Изображение + Файл' }}
+              📎 {{ question.media_type === 'image' ? 'Изображение' : question.media_type === 'file' ? 'Файл' : 'Изображение + Файл' }}
             </span>
             <span v-if="question.question_type === 'choice'" class="question-options">
               Варианты: {{ Array.isArray(question.options) ? question.options.join(', ') : question.options }}
@@ -224,28 +222,23 @@ const API_BASE = 'http://127.0.0.1:8000/api/admin';
 
 export default {
   name: 'AdminPanel',
-
-  components: {ThemeToggle},
-
+  components: { ThemeToggle },
   data() {
     return {
       activeTab: 'subjects',
-
+      
       subjects: [],
       topics: [],
       questions: [],
-
-      // Форма предмета
+      
       showAddSubject: false,
       newSubject: { name: '', slug: '', icon: '' },
       editingSubject: null,
-
-      // Форма темы
+      
       showAddTopic: false,
       newTopic: { subject_id: '', name: '', description: '' },
       editingTopic: null,
-
-      // Форма вопроса
+      
       showAddQuestion: false,
       newQuestion: {
         topic_id: '',
@@ -551,7 +544,7 @@ export default {
           );
           alert('✅ Вопрос добавлен!');
         }
-
+        
         this.showAddQuestion = false;
         this.editingQuestion = null;
         this.newQuestion = {
@@ -592,12 +585,14 @@ export default {
 
 <style scoped>
 .admin-panel {
-  background: rgba(10, 5, 3, 0.95);
+  background: var(--bg-secondary, #1b0e0b);
   border-radius: 16px;
   padding: 30px;
-  color: #fff;
+  color: var(--text-primary, #f0e0d0);
   max-width: 900px;
   margin: 40px auto;
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.15));
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .admin-header {
@@ -605,6 +600,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .admin-header h1 {
@@ -615,20 +612,29 @@ export default {
   background-clip: text;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
 .btn-exit {
-  padding: 10px 20px;
-  background: rgba(255, 69, 0, 0.2);
-  border: 1px solid #ff4500;
-  border-radius: 8px;
-  color: #ffa07a;
+  padding: 8px 16px;
+  background: var(--button-bg, rgba(255, 69, 0, 0.15));
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.2));
+  border-radius: 20px;
+  color: var(--text-secondary, #ffa07a);
   text-decoration: none;
   transition: 0.3s;
   font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .btn-exit:hover {
   background: #ff4500;
   color: #fff;
+  border-color: #ff4500;
 }
 
 .admin-nav {
@@ -640,17 +646,17 @@ export default {
 
 .admin-nav button {
   padding: 10px 20px;
-  border: 1px solid #ff4500;
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.2));
   background: transparent;
-  color: #ffa07a;
+  color: var(--text-secondary, #ffa07a);
   border-radius: 8px;
   cursor: pointer;
   transition: 0.3s;
+  font-weight: 600;
 }
 
 .admin-nav button:hover {
-  background: #ff4500;
-  color: #fff;
+  background: rgba(255, 69, 0, 0.15);
 }
 
 .admin-nav button.active {
@@ -671,7 +677,7 @@ export default {
 
 .btn-add {
   padding: 8px 16px;
-  background: rgba(255, 69, 0, 0.3);
+  background: rgba(255, 69, 0, 0.2);
   border: 1px solid #ff8c00;
   color: #ff8c00;
   border-radius: 8px;
@@ -690,9 +696,11 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 12px 20px;
-  background: rgba(255, 69, 0, 0.1);
+  background: var(--bg-card, rgba(255, 69, 0, 0.05));
   border-radius: 8px;
   margin-bottom: 8px;
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.05));
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .question-item {
@@ -708,12 +716,12 @@ export default {
 }
 
 .question-text {
-  color: #f0e0d0;
+  color: var(--text-primary, #f0e0d0);
   font-size: 1.05rem;
 }
 
 .question-options {
-  color: #888;
+  color: var(--text-muted, #888);
   font-size: 0.9rem;
 }
 
@@ -723,7 +731,7 @@ export default {
 }
 
 .topic-desc {
-  color: #888;
+  color: var(--text-muted, #888);
   font-size: 0.85rem;
   margin-left: 8px;
 }
@@ -745,19 +753,20 @@ export default {
 }
 
 .btn-edit:hover {
-  background: rgba(255, 140, 0, 0.3);
+  background: rgba(255, 140, 0, 0.25);
 }
 
 .btn-delete:hover {
-  background: rgba(255, 51, 51, 0.3);
+  background: rgba(255, 51, 51, 0.25);
 }
 
 .add-form {
-  background: rgba(255, 69, 0, 0.05);
+  background: var(--bg-card, rgba(255, 69, 0, 0.03));
   padding: 20px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 69, 0, 0.2);
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.1));
   margin-bottom: 20px;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .add-form h3 {
@@ -772,11 +781,12 @@ export default {
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 69, 0, 0.3);
-  color: #fff;
+  background: var(--bg-input, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.15));
+  color: var(--text-primary, #f0e0d0);
   border-radius: 8px;
   font-size: 1rem;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .add-form input:focus,
@@ -784,11 +794,12 @@ export default {
 .add-form textarea:focus {
   outline: none;
   border-color: #ff4500;
-  background: rgba(255, 69, 0, 0.1);
+  background: rgba(255, 69, 0, 0.08);
 }
 
 .add-form select option {
-  background: #1b0e0b;
+  background: var(--bg-secondary, #1b0e0b);
+  color: var(--text-primary, #f0e0d0);
 }
 
 .options-group {
@@ -819,7 +830,7 @@ export default {
 }
 
 .btn-add-option {
-  background: rgba(255, 69, 0, 0.2);
+  background: rgba(255, 69, 0, 0.15);
   border: 1px dashed #ff4500;
   color: #ff8c5a;
   padding: 6px 16px;
@@ -830,7 +841,7 @@ export default {
 }
 
 .btn-add-option:hover {
-  background: rgba(255, 69, 0, 0.3);
+  background: rgba(255, 69, 0, 0.25);
 }
 
 .btn-remove-option {
@@ -857,6 +868,30 @@ export default {
 .input-answer-group h4 {
   color: #ffa07a;
   margin-bottom: 8px;
+}
+
+.question-type {
+  display: flex;
+  gap: 20px;
+  margin: 10px 0;
+  padding: 10px;
+  background: var(--bg-card, rgba(255, 69, 0, 0.03));
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.question-type label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary, #ddd);
+  cursor: pointer;
+}
+
+.question-type input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ff4500;
 }
 
 .question-type-badge {
@@ -887,7 +922,7 @@ export default {
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
-  background: rgba(0, 200, 255, 0.2);
+  background: rgba(0, 200, 255, 0.15);
   color: #66ddff;
   margin-right: 10px;
 }
@@ -895,9 +930,9 @@ export default {
 .media-group {
   margin: 15px 0;
   padding: 15px;
-  background: rgba(0, 200, 255, 0.05);
+  background: rgba(0, 200, 255, 0.03);
   border-radius: 8px;
-  border: 1px solid rgba(0, 200, 255, 0.1);
+  border: 1px solid rgba(0, 200, 255, 0.08);
 }
 
 .media-group h4 {
@@ -916,7 +951,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #ccc;
+  color: var(--text-secondary, #ccc);
   cursor: pointer;
 }
 
@@ -930,7 +965,7 @@ export default {
 
 .media-hint {
   display: block;
-  color: #888;
+  color: var(--text-muted, #888);
   font-size: 0.85rem;
   margin-top: 5px;
 }
@@ -948,9 +983,9 @@ export default {
   display: block;
   width: 100%;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 69, 0, 0.3);
-  color: #fff;
+  background: var(--bg-input, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.15));
+  color: var(--text-primary, #f0e0d0);
   border-radius: 8px;
   font-size: 1rem;
 }
@@ -959,6 +994,7 @@ export default {
   display: flex;
   gap: 10px;
   margin-top: 15px;
+  flex-wrap: wrap;
 }
 
 .btn-save {
@@ -978,9 +1014,9 @@ export default {
 }
 
 .btn-cancel {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid #666;
+  background: var(--button-bg, rgba(255, 255, 255, 0.08));
+  color: var(--text-secondary, #fff);
+  border: 1px solid var(--border-color, #666);
   padding: 12px 30px;
   border-radius: 8px;
   cursor: pointer;
@@ -988,12 +1024,6 @@ export default {
 }
 
 .btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+  background: rgba(255, 255, 255, 0.15);
 }
 </style>
