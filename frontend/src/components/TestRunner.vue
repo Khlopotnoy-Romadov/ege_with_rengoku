@@ -8,10 +8,25 @@
     </div>
 
     <div class="question-block" v-if="currentQuestion">
+      <!-- Медиа-контент (изображения и файлы) -->
+      <div v-if="currentQuestion.media_type && currentQuestion.media_type !== 'none'" class="media-container">
+        <div v-if="currentQuestion.media_type === 'image' || currentQuestion.media_type === 'both'" class="media-image">
+          <img :src="currentQuestion.media_url" :alt="currentQuestion.media_description || 'Схема к заданию'" />
+          <p v-if="currentQuestion.media_description" class="media-caption">
+            {{ currentQuestion.media_description }}
+          </p>
+        </div>
+        <div v-if="currentQuestion.media_type === 'file' || currentQuestion.media_type === 'both'" class="media-file">
+          <a :href="currentQuestion.media_url" target="_blank" class="btn-download">
+            📥 Скачать файл
+          </a>
+        </div>
+      </div>
+
       <p class="question-text">{{ currentQuestion.text }}</p>
-      
+
       <!-- Тип вопроса: С выбором ответа -->
-      <div v-if="currentQuestion.question_type === 'choice' || !currentQuestion.question_type" class="options">
+      <div v-if="currentQuestion.question_type === 'choice'" class="options">
         <div 
           v-for="(option, idx) in currentQuestion.options" 
           :key="idx"
@@ -28,11 +43,23 @@
         </div>
       </div>
 
-      <!-- Тип вопроса: С вводом ответа -->
+      <!-- Тип вопроса: С вводом ответа (число или текст) -->
       <div v-else class="input-answer">
-        <label for="userAnswer" class="input-label">✍️ Введите ваш ответ:</label>
+        <label class="input-label">
+          <span v-if="currentQuestion.answer_type === 'number'">🔢 Введите число:</span>
+          <span v-else>✍️ Введите ваш ответ:</span>
+        </label>
         <input 
-          id="userAnswer"
+          v-if="currentQuestion.answer_type === 'number'"
+          type="number" 
+          v-model.number="userNumberAnswer" 
+          :disabled="showResult"
+          placeholder="Введите число..."
+          class="answer-input"
+          @keyup.enter="checkAnswer"
+        />
+        <input 
+          v-else
           type="text" 
           v-model="userInputAnswer" 
           :disabled="showResult"
@@ -41,6 +68,11 @@
           @keyup.enter="checkAnswer"
         />
       </div>
+
+      <!-- Кнопка ответа -->
+      <button v-if="!showResult" class="btn-check" @click="checkAnswer" :disabled="!canAnswer">
+        ⚔️ Ответить
+      </button>
 
       <!-- Результат -->
       <div v-if="showResult" class="result-feedback">
@@ -60,11 +92,6 @@
           {{ isLast ? '🔥 Показать результат' : 'Следующий вопрос →' }}
         </button>
       </div>
-
-      <!-- Кнопка ответа -->
-      <button v-else class="btn-check" @click="checkAnswer" :disabled="!canAnswer">
-        ⚔️ Ответить
-      </button>
     </div>
 
     <!-- Результаты -->
@@ -102,6 +129,7 @@ export default {
       currentIndex: 0,
       selectedOption: null,
       userInputAnswer: '',
+      userNumberAnswer: null,
       showResult: false,
       score: 0,
       isFinished: false
@@ -115,17 +143,22 @@ export default {
       return this.currentIndex === this.topic.questions.length - 1;
     },
     canAnswer() {
-      if (this.currentQuestion?.question_type === 'input') {
-        return this.userInputAnswer.trim() !== '';
+      if (this.currentQuestion?.question_type === 'choice') {
+        return this.selectedOption !== null;
       }
-      return this.selectedOption !== null;
+      if (this.currentQuestion?.answer_type === 'number') {
+        return this.userNumberAnswer !== null && this.userNumberAnswer !== '';
+      }
+      return this.userInputAnswer.trim() !== '';
     },
     isAnswerCorrect() {
-      if (this.currentQuestion?.question_type === 'input') {
-        // Сравниваем ответ пользователя с правильным (регистронезависимо)
-        return this.userInputAnswer.trim().toLowerCase() === this.currentQuestion.correct.trim().toLowerCase();
+      if (this.currentQuestion?.question_type === 'choice') {
+        return this.selectedOption === this.currentQuestion.correct;
       }
-      return this.selectedOption === this.currentQuestion?.correct;
+      if (this.currentQuestion?.answer_type === 'number') {
+        return this.userNumberAnswer == this.currentQuestion.correct;
+      }
+      return this.userInputAnswer.trim().toLowerCase() === this.currentQuestion.correct.trim().toLowerCase();
     }
   },
   methods: {
@@ -134,7 +167,7 @@ export default {
       this.selectedOption = option;
     },
     checkAnswer() {
-      if (!this.canAnswer) return;
+      if (!this.canAnswer || this.showResult) return;
       
       this.showResult = true;
       
@@ -151,6 +184,7 @@ export default {
       this.currentIndex++;
       this.selectedOption = null;
       this.userInputAnswer = '';
+      this.userNumberAnswer = null;
       this.showResult = false;
     }
   }
@@ -198,6 +232,43 @@ export default {
   background: rgba(255, 69, 0, 0.05);
   border-radius: 12px;
   border-left: 4px solid #ff4500;
+}
+
+/* === Медиа-контент === */
+.media-container {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(0, 200, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 200, 255, 0.1);
+}
+
+.media-image img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.media-caption {
+  color: #88ccdd;
+  font-size: 0.95rem;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.btn-download {
+  display: inline-block;
+  padding: 10px 20px;
+  background: rgba(255, 69, 0, 0.2);
+  border: 1px solid #ff4500;
+  border-radius: 8px;
+  color: #ffa07a;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.btn-download:hover {
+  background: #ff4500;
+  color: #fff;
 }
 
 /* === Стили для вариантов ответов === */

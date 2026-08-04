@@ -89,16 +89,16 @@
 
         <div v-if="showAddQuestion" class="add-form">
           <h3>{{ editingQuestion ? '✏️ Редактировать вопрос' : '➕ Добавить вопрос' }}</h3>
-
+          
           <select v-model="newQuestion.topic_id">
             <option value="">Выберите тему</option>
             <option v-for="topic in topics" :key="topic.id" :value="topic.id">
               {{ getSubjectName(topic.subject_id) }} → {{ topic.name }}
             </option>
           </select>
-
+          
           <textarea v-model="newQuestion.question_text" placeholder="Текст вопроса" rows="3"></textarea>
-
+          
           <!-- Тип вопроса -->
           <div class="question-type">
             <label>
@@ -111,17 +111,26 @@
             </label>
           </div>
 
+          <!-- Тип ответа пользователя -->
+          <div class="answer-type-group">
+            <h4>✍️ Формат ответа пользователя:</h4>
+            <select v-model="newQuestion.answer_type">
+              <option value="text">Текстовый ввод</option>
+              <option value="number">Число</option>
+              <option value="choice">Выбор из вариантов</option>
+            </select>
+          </div>
+
           <!-- Варианты ответов (для типа choice) -->
           <div v-if="newQuestion.question_type === 'choice'" class="options-group">
             <h4>Варианты ответов:</h4>
             <div v-for="(option, index) in newQuestion.options" :key="index" class="option-input">
               <span>{{ String.fromCharCode(65 + index) }}.</span>
               <input v-model="newQuestion.options[index]" :placeholder="`Вариант ${String.fromCharCode(65 + index)}`">
-              <button v-if="newQuestion.options.length > 2" @click="removeOption(index)"
-                class="btn-remove-option">✕</button>
+              <button v-if="newQuestion.options.length > 2" @click="removeOption(index)" class="btn-remove-option">✕</button>
             </div>
             <button @click="addOption" class="btn-add-option">➕ Добавить вариант</button>
-
+            
             <select v-model="newQuestion.correct_answer" class="correct-select">
               <option value="">Правильный ответ</option>
               <option v-for="(_, index) in newQuestion.options" :key="index" :value="String.fromCharCode(65 + index)">
@@ -130,14 +139,46 @@
             </select>
           </div>
 
-          <!-- Правильный ответ (для типа input) -->
+          <!-- Правильный ответ для ввода -->
           <div v-if="newQuestion.question_type === 'input'" class="input-answer-group">
             <h4>Правильный ответ:</h4>
             <input v-model="newQuestion.correct_answer" placeholder="Введите правильный ответ">
           </div>
 
+          <!-- Подсказка -->
           <input v-model="newQuestion.hint" placeholder="Подсказка (необязательно)">
           <input v-model.number="newQuestion.points" placeholder="Баллы (по умолчанию 1)" type="number" min="1">
+
+          <!-- Медиа-контент (только для админа) -->
+          <div class="media-group">
+            <h4>📎 Прикреплённые файлы/изображения:</h4>
+            <div class="media-type-select">
+              <label>
+                <input type="radio" v-model="newQuestion.media_type" value="none">
+                Без медиа
+              </label>
+              <label>
+                <input type="radio" v-model="newQuestion.media_type" value="image">
+                🖼️ Изображение
+              </label>
+              <label>
+                <input type="radio" v-model="newQuestion.media_type" value="file">
+                📄 Файл
+              </label>
+              <label>
+                <input type="radio" v-model="newQuestion.media_type" value="both">
+                🖼️+📄 Изображение и файл
+              </label>
+            </div>
+
+            <div v-if="newQuestion.media_type !== 'none'" class="media-fields">
+              <input v-model="newQuestion.media_url" placeholder="URL файла/изображения (например: /uploads/image.png)">
+              <textarea v-model="newQuestion.media_description" placeholder="Описание медиа (для изображений)" rows="2"></textarea>
+              <small class="media-hint">
+                💡 Для файлов из заданий: загрузите файлы в папку public/uploads/
+              </small>
+            </div>
+          </div>
 
           <div class="form-actions">
             <button @click="saveQuestion" class="btn-save">💾 Сохранить</button>
@@ -149,8 +190,12 @@
         <div v-for="question in questions" :key="question.id" class="admin-item question-item">
           <div class="question-info">
             <span class="question-type-badge">{{ question.question_type === 'input' ? '✍️ Ввод' : '📝 Выбор' }}</span>
+            <span class="answer-type-badge">{{ getAnswerTypeLabel(question.answer_type) }}</span>
             <strong>{{ getTopicName(question.topic_id) }}</strong>
             <span class="question-text">{{ question.question_text }}</span>
+            <span v-if="question.media_type && question.media_type !== 'none'" class="media-badge">
+              📎 {{ question.media_type === 'image' ? 'Изображение' : question.media_type === 'file' ? 'Файл' : 'Изображение + Файл' }}
+            </span>
             <span v-if="question.question_type === 'choice'" class="question-options">
               Варианты: {{ Array.isArray(question.options) ? question.options.join(', ') : question.options }}
             </span>
@@ -176,22 +221,21 @@ export default {
   data() {
     return {
       activeTab: 'subjects',
-
-      // Данные
+      
       subjects: [],
       topics: [],
       questions: [],
-
+      
       // Форма предмета
       showAddSubject: false,
       newSubject: { name: '', slug: '', icon: '' },
       editingSubject: null,
-
+      
       // Форма темы
       showAddTopic: false,
       newTopic: { subject_id: '', name: '', description: '' },
       editingTopic: null,
-
+      
       // Форма вопроса
       showAddQuestion: false,
       newQuestion: {
@@ -201,7 +245,11 @@ export default {
         options: [],
         correct_answer: '',
         hint: '',
-        points: 1
+        points: 1,
+        media_type: 'none',
+        media_url: '',
+        media_description: '',
+        answer_type: 'text'
       },
       editingQuestion: null
     };
@@ -210,7 +258,6 @@ export default {
     this.loadAll();
   },
   methods: {
-    // === ЗАГРУЗКА ДАННЫХ ===
     async loadAll() {
       await Promise.all([
         this.loadSubjects(),
@@ -252,7 +299,6 @@ export default {
       }
     },
 
-    // === ВСПОМОГАТЕЛЬНЫЕ ===
     getSubjectName(id) {
       const subject = this.subjects.find(s => s.id === id);
       return subject ? subject.name : 'Неизвестный предмет';
@@ -261,6 +307,15 @@ export default {
     getTopicName(id) {
       const topic = this.topics.find(t => t.id === id);
       return topic ? topic.name : 'Неизвестная тема';
+    },
+
+    getAnswerTypeLabel(type) {
+      const labels = {
+        text: 'Текст',
+        number: 'Число',
+        choice: 'Выбор'
+      };
+      return labels[type] || type;
     },
 
     switchTab(tab) {
@@ -392,10 +447,14 @@ export default {
         topic_id: '',
         question_text: '',
         question_type: 'input',
-        options: ['', '', '', ''],
+        options: [],
         correct_answer: '',
         hint: '',
-        points: 1
+        points: 1,
+        media_type: 'none',
+        media_url: '',
+        media_description: '',
+        answer_type: 'text'
       };
     },
 
@@ -414,7 +473,6 @@ export default {
 
     removeOption(index) {
       this.newQuestion.options.splice(index, 1);
-      // Если удалили вариант, который был правильным ответом
       if (this.newQuestion.correct_answer === String.fromCharCode(65 + index)) {
         this.newQuestion.correct_answer = '';
       }
@@ -430,7 +488,11 @@ export default {
         options: isChoice ? (Array.isArray(question.options) ? question.options : ['', '', '', '']) : [],
         correct_answer: question.correct_answer || '',
         hint: question.hint || '',
-        points: question.points || 1
+        points: question.points || 1,
+        media_type: question.media_type || 'none',
+        media_url: question.media_url || '',
+        media_description: question.media_description || '',
+        answer_type: question.answer_type || 'text'
       };
       this.showAddQuestion = true;
     },
@@ -443,7 +505,11 @@ export default {
           question_type: this.newQuestion.question_type,
           correct_answer: this.newQuestion.correct_answer,
           hint: this.newQuestion.hint,
-          points: this.newQuestion.points || 1
+          points: this.newQuestion.points || 1,
+          media_type: this.newQuestion.media_type,
+          media_url: this.newQuestion.media_url,
+          media_description: this.newQuestion.media_description,
+          answer_type: this.newQuestion.answer_type
         };
 
         if (this.newQuestion.question_type === 'choice') {
@@ -476,17 +542,21 @@ export default {
           );
           alert('✅ Вопрос добавлен!');
         }
-
+        
         this.showAddQuestion = false;
         this.editingQuestion = null;
         this.newQuestion = {
           topic_id: '',
           question_text: '',
-          question_type: 'choice',
-          options: ['', '', '', ''],
+          question_type: 'input',
+          options: [],
           correct_answer: '',
           hint: '',
-          points: 1
+          points: 1,
+          media_type: 'none',
+          media_url: '',
+          media_description: '',
+          answer_type: 'text'
         };
         this.loadQuestions();
       } catch (error) {
@@ -512,84 +582,6 @@ export default {
 </script>
 
 <style scoped>
-/* ... остальные стили ... */
-
-.question-type {
-  display: flex;
-  gap: 20px;
-  margin: 10px 0;
-  padding: 10px;
-  background: rgba(255, 69, 0, 0.05);
-  border-radius: 8px;
-}
-
-.question-type label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #ddd;
-  cursor: pointer;
-}
-
-.question-type input[type="radio"] {
-  width: 18px;
-  height: 18px;
-  accent-color: #ff4500;
-}
-
-.btn-add-option {
-  background: rgba(255, 69, 0, 0.2);
-  border: 1px dashed #ff4500;
-  color: #ff8c5a;
-  padding: 6px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-top: 5px;
-  transition: 0.3s;
-}
-
-.btn-add-option:hover {
-  background: rgba(255, 69, 0, 0.3);
-}
-
-.btn-remove-option {
-  background: none;
-  border: none;
-  color: #ff4444;
-  cursor: pointer;
-  font-size: 1.1rem;
-  padding: 0 5px;
-}
-
-.btn-remove-option:hover {
-  color: #ff0000;
-}
-
-.correct-select {
-  margin-top: 10px;
-}
-
-.input-answer-group {
-  margin: 10px 0;
-}
-
-.input-answer-group h4 {
-  color: #ffa07a;
-  margin-bottom: 8px;
-}
-
-.question-type-badge {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: rgba(255, 69, 0, 0.2);
-  color: #ff8c5a;
-  margin-right: 10px;
-}
-
-/* Остальные стили из предыдущей версии */
 .admin-panel {
   background: rgba(10, 5, 3, 0.95);
   border-radius: 16px;
@@ -815,6 +807,143 @@ export default {
 .option-input input {
   margin-bottom: 0;
   flex: 1;
+}
+
+.btn-add-option {
+  background: rgba(255, 69, 0, 0.2);
+  border: 1px dashed #ff4500;
+  color: #ff8c5a;
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 5px;
+  transition: 0.3s;
+}
+
+.btn-add-option:hover {
+  background: rgba(255, 69, 0, 0.3);
+}
+
+.btn-remove-option {
+  background: none;
+  border: none;
+  color: #ff4444;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0 5px;
+}
+
+.btn-remove-option:hover {
+  color: #ff0000;
+}
+
+.correct-select {
+  margin-top: 10px;
+}
+
+.input-answer-group {
+  margin: 10px 0;
+}
+
+.input-answer-group h4 {
+  color: #ffa07a;
+  margin-bottom: 8px;
+}
+
+.question-type-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 69, 0, 0.2);
+  color: #ff8c5a;
+  margin-right: 10px;
+}
+
+.answer-type-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 140, 0, 0.2);
+  color: #ffcc66;
+  margin-right: 10px;
+}
+
+.media-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(0, 200, 255, 0.2);
+  color: #66ddff;
+  margin-right: 10px;
+}
+
+.media-group {
+  margin: 15px 0;
+  padding: 15px;
+  background: rgba(0, 200, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 200, 255, 0.1);
+}
+
+.media-group h4 {
+  color: #66ddff;
+  margin-bottom: 10px;
+}
+
+.media-type-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.media-type-select label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ccc;
+  cursor: pointer;
+}
+
+.media-type-select input[type="radio"] {
+  accent-color: #ff4500;
+}
+
+.media-fields {
+  margin-top: 10px;
+}
+
+.media-hint {
+  display: block;
+  color: #888;
+  font-size: 0.85rem;
+  margin-top: 5px;
+}
+
+.answer-type-group {
+  margin: 10px 0;
+}
+
+.answer-type-group h4 {
+  color: #ffa07a;
+  margin-bottom: 8px;
+}
+
+.answer-type-group select {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 69, 0, 0.3);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 1rem;
 }
 
 .form-actions {

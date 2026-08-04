@@ -13,7 +13,11 @@ class Question extends Model
         'options',
         'correct_answer',
         'hint',
-        'points'
+        'points',
+        'media_type',
+        'media_url',
+        'media_description',
+        'answer_type'
     ];
 
     protected $casts = [
