@@ -12,37 +12,70 @@
       <div v-if="loading" class="loading">🔥 Загрузка...</div>
 
       <div v-else-if="topic && topic.questions" class="questions-list">
-        <div v-for="(q, index) in topic.questions" :key="q.id" class="question-card">
+        <div
+          v-for="(q, index) in topic.questions"
+          :key="q.id"
+          class="question-card"
+        >
           <div class="question-header">
             <span class="question-number">Задание №{{ q.number || index + 1 }}</span>
             <span v-if="q.type" class="question-type">{{ q.type }}</span>
-            <span v-if="q.difficulty" class="question-difficulty" :class="q.difficulty">
+            <span
+              v-if="q.difficulty"
+              class="question-difficulty"
+              :class="q.difficulty"
+            >
               {{ q.difficulty === 'easy' ? '🟢' : q.difficulty === 'medium' ? '🟡' : '🔴' }}
             </span>
           </div>
 
-          <!-- Изображение -->
-          <div v-if="q.media && q.media.type === 'image'" class="media-container">
-            <img :src="q.media.url" :alt="q.media.description || 'Схема'" />
-            <p v-if="q.media.description" class="media-caption">
-              {{ q.media.description }}
-            </p>
-          </div>
-
+          <!-- 1. Текст вопроса -->
           <p class="question-text">{{ q.text }}</p>
 
-          <!-- Файл -->
-          <div v-if="q.media && q.media.type === 'file'" class="media-file">
-            <a :href="q.media.url" download class="btn-download" @click.prevent="downloadFile(q.media.url)">
-              📥 Скачать файл
-            </a>
+          <!-- 2. Таблица -->
+          <TableRenderer v-if="q.table" :tableData="q.table" />
+
+          <!-- 3. Изображения (только image) -->
+          <div v-if="getImagesList(q).length > 0" class="media-container">
+            <div
+              v-for="(item, idx) in getImagesList(q)"
+              :key="idx"
+              class="media-item"
+            >
+              <div class="media-image">
+                <img :src="item.url" :alt="item.description || 'Схема к заданию'" />
+                <p v-if="item.description" class="media-caption">
+                  {{ item.description }}
+                </p>
+              </div>
+            </div>
           </div>
 
+          <!-- 4. Файлы для скачивания (только file) -->
+          <div v-if="getFilesList(q).length > 0" class="files-container">
+            <div
+              v-for="(item, idx) in getFilesList(q)"
+              :key="idx"
+              class="file-item"
+            >
+              <a
+                :href="item.url"
+                download
+                class="btn-download"
+                @click.prevent="downloadFile(item.url)"
+              >
+                📥 {{ item.description || 'Скачать файл' }}
+              </a>
+            </div>
+          </div>
+
+          <!-- 5. Ответ -->
           <div class="question-answer">
             <span class="answer-label">✅ Правильный ответ: </span>
             <span class="answer-value">{{ q.correctAnswer }}</span>
           </div>
 
+          <!-- 6. Подсказка -->
           <div v-if="q.hint" class="hint">
             💡 Подсказка: {{ q.hint }}
           </div>
@@ -60,10 +93,11 @@
 import { fetchSubject } from '@/api/subject';
 import FlameBackground from '@/components/FlameBackground.vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
+import TableRenderer from '@/components/TableRenderer.vue';
 
 export default {
   name: 'FullVariant',
-  components: { FlameBackground, ThemeToggle },
+  components: { FlameBackground, ThemeToggle, TableRenderer },
   data() {
     return {
       topic: null,
@@ -83,8 +117,30 @@ export default {
       this.loading = false;
     }
   },
-
   methods: {
+    /**
+     * Получить список всех медиа (для обратной совместимости)
+     */
+    getMediaList(question) {
+      if (!question?.media) return [];
+      if (Array.isArray(question.media)) return question.media;
+      return [question.media];
+    },
+
+    /**
+     * Получить только изображения
+     */
+    getImagesList(question) {
+      return this.getMediaList(question).filter(item => item.type === 'image');
+    },
+
+    /**
+     * Получить только файлы
+     */
+    getFilesList(question) {
+      return this.getMediaList(question).filter(item => item.type === 'file');
+    },
+
     downloadFile(url) {
       const link = document.createElement('a');
       link.href = url;
@@ -199,29 +255,56 @@ export default {
 
 .question-text {
   font-size: 1.15rem;
-  line-height: 1.6;
+  line-height: 1.8;
   color: var(--text-primary, #f0e0d0);
   margin: 10px 0;
+  white-space: pre-line;
 }
 
+/* ===== МЕДИА-КОНТЕЙНЕР (изображения) ===== */
 .media-container {
-  margin: 10px 0;
+  margin: 15px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.media-item {
+  background: var(--bg-card, rgba(255, 255, 255, 0.02));
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.05));
+}
+
+.media-image {
   text-align: center;
 }
 
-.media-container img {
+.media-image img {
   max-width: 100%;
   border-radius: 8px;
+  max-height: 500px;
+  object-fit: contain;
 }
 
 .media-caption {
-  color: var(--text-muted, #888);
+  color: var(--text-secondary, #d4a088);
   font-size: 0.9rem;
-  margin-top: 5px;
+  margin-top: 6px;
+  text-align: center;
 }
 
-.media-file {
-  margin: 10px 0;
+/* ===== ФАЙЛЫ ДЛЯ СКАЧИВАНИЯ ===== */
+.files-container {
+  margin: 15px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.file-item {
+  display: flex;
+  justify-content: center;
 }
 
 .btn-download {
@@ -234,6 +317,7 @@ export default {
   text-decoration: none;
   transition: 0.3s;
   font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .btn-download:hover {
@@ -242,6 +326,7 @@ export default {
   border-color: #ff4500;
 }
 
+/* ===== ОТВЕТ И ПОДСКАЗКА ===== */
 .question-answer {
   margin: 15px 0 5px;
   padding: 10px 14px;
@@ -275,13 +360,14 @@ export default {
   .variant-title {
     font-size: 1.8rem;
   }
-
   .question-card {
     padding: 18px;
   }
-
   .question-text {
     font-size: 1rem;
+  }
+  .media-image img {
+    max-height: 300px;
   }
 }
 </style>

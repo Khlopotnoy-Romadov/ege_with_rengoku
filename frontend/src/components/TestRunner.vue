@@ -18,54 +18,96 @@
     </div>
 
     <div class="question-block" v-if="currentQuestion">
-      <!-- Медиа-контент -->
-      <div v-if="currentQuestion.media_type && currentQuestion.media_type !== 'none'" class="media-container">
-        <div v-if="currentQuestion.media_type === 'image' || currentQuestion.media_type === 'both'" class="media-image">
-          <img :src="currentQuestion.media_url" :alt="currentQuestion.media_description || 'Схема к заданию'" />
-          <p v-if="currentQuestion.media_description" class="media-caption">
-            {{ currentQuestion.media_description }}
-          </p>
+      <!-- 1. Текст вопроса -->
+      <p class="question-text">{{ currentQuestion.text }}</p>
+
+      <!-- 2. Таблица -->
+      <TableRenderer v-if="currentQuestion.table" :tableData="currentQuestion.table" />
+
+      <!-- 3. Изображения (только image) -->
+      <div v-if="getImagesList(currentQuestion).length > 0" class="media-container">
+        <div
+          v-for="(item, idx) in getImagesList(currentQuestion)"
+          :key="idx"
+          class="media-item"
+        >
+          <div class="media-image">
+            <img :src="item.url" :alt="item.description || 'Схема к заданию'" />
+            <p v-if="item.description" class="media-caption">
+              {{ item.description }}
+            </p>
+          </div>
         </div>
-        <div v-if="currentQuestion.media && currentQuestion.media.type === 'file'" class="media-file">
-          <a :href="currentQuestion.media.url" download class="btn-download">
-            📥 Скачать файл
+      </div>
+
+      <!-- 4. Файлы для скачивания (только file) -->
+      <div v-if="getFilesList(currentQuestion).length > 0" class="files-container">
+        <div
+          v-for="(item, idx) in getFilesList(currentQuestion)"
+          :key="idx"
+          class="file-item"
+        >
+          <a
+            :href="item.url"
+            download
+            class="btn-download"
+            @click.prevent="downloadFile(item.url)"
+          >
+            📥 {{ item.description || 'Скачать файл' }}
           </a>
         </div>
       </div>
 
-
-      <p class="question-text">{{ currentQuestion.text }}</p>
-
-      <!-- Тип вопроса: С выбором ответа -->
+      <!-- 5. Варианты ответов (для типа choice) -->
       <div v-if="currentQuestion.question_type === 'choice'" class="options">
-        <div v-for="(option, idx) in currentQuestion.options" :key="idx" class="option-item" :class="{
-          selected: selectedOption === String.fromCharCode(65 + idx),
-          correct: showResult && String.fromCharCode(65 + idx) === currentQuestion.correct,
-          wrong: showResult && selectedOption === String.fromCharCode(65 + idx) && selectedOption !== currentQuestion.correct
-        }" @click="selectOption(String.fromCharCode(65 + idx))">
+        <div
+          v-for="(option, idx) in currentQuestion.options"
+          :key="idx"
+          class="option-item"
+          :class="{
+            selected: selectedOption === String.fromCharCode(65 + idx),
+            correct: showResult && String.fromCharCode(65 + idx) === currentQuestion.correct,
+            wrong: showResult && selectedOption === String.fromCharCode(65 + idx) && selectedOption !== currentQuestion.correct
+          }"
+          @click="selectOption(String.fromCharCode(65 + idx))"
+        >
           <span class="option-label">{{ String.fromCharCode(65 + idx) }}.</span>
           <span class="option-text">{{ option }}</span>
         </div>
       </div>
 
-      <!-- Тип вопроса: С вводом ответа -->
+      <!-- 6. Ввод ответа (для типа input) -->
       <div v-else class="input-answer">
         <label class="input-label">
           <span v-if="currentQuestion.answer_type === 'number'">🔢 Введите число:</span>
           <span v-else>✍️ Введите ваш ответ:</span>
         </label>
-        <input v-if="currentQuestion.answer_type === 'number'" type="number" v-model.number="userNumberAnswer"
-          :disabled="showResult" placeholder="Введите число..." class="answer-input" @keyup.enter="checkAnswer" />
-        <input v-else type="text" v-model="userInputAnswer" :disabled="showResult" placeholder="Введите ответ..."
-          class="answer-input" @keyup.enter="checkAnswer" />
+        <input
+          v-if="currentQuestion.answer_type === 'number'"
+          type="number"
+          v-model.number="userNumberAnswer"
+          :disabled="showResult"
+          placeholder="Введите число..."
+          class="answer-input"
+          @keyup.enter="checkAnswer"
+        />
+        <input
+          v-else
+          type="text"
+          v-model="userInputAnswer"
+          :disabled="showResult"
+          placeholder="Введите ответ..."
+          class="answer-input"
+          @keyup.enter="checkAnswer"
+        />
       </div>
 
-      <!-- Кнопка ответа -->
+      <!-- 7. Кнопка ответа -->
       <button v-if="!showResult" class="btn-check" @click="checkAnswer" :disabled="!canAnswer">
         ⚔️ Ответить
       </button>
 
-      <!-- Результат с сообщением от наставника -->
+      <!-- 8. Результат с сообщением от наставника -->
       <div v-if="showResult" class="result-feedback">
         <div v-if="isAnswerCorrect" class="correct-feedback">
           <div class="mentor-message correct-message">
@@ -97,7 +139,7 @@
       </div>
     </div>
 
-    <!-- Экран результатов -->
+    <!-- 9. Экран результатов -->
     <div v-if="isFinished" class="result-screen">
       <h2>🔥 結果 (Результат)</h2>
 
@@ -137,10 +179,12 @@
 
 <script>
 import { defaultMentor, mentors } from '@/data/mentors';
+import TableRenderer from '@/components/TableRenderer.vue';
 
 export default {
   name: 'TestRunner',
   inject: ['mentor'],
+  components: { TableRenderer },
   props: {
     topic: {
       type: Object,
@@ -188,16 +232,39 @@ export default {
     }
   },
   watch: {
-    // Сбрасываем состояние при смене темы
     topic() {
       this.resetTest();
     }
   },
   methods: {
+    /**
+     * Универсальный метод получения списка медиа
+     */
+    getMediaList(question) {
+      if (!question?.media) return [];
+      if (Array.isArray(question.media)) return question.media;
+      return [question.media];
+    },
+
+    /**
+     * Получить только изображения
+     */
+    getImagesList(question) {
+      return this.getMediaList(question).filter(item => item.type === 'image');
+    },
+
+    /**
+     * Получить только файлы
+     */
+    getFilesList(question) {
+      return this.getMediaList(question).filter(item => item.type === 'file');
+    },
+
     selectOption(option) {
       if (this.showResult) return;
       this.selectedOption = option;
     },
+
     checkAnswer() {
       if (!this.canAnswer || this.showResult) return;
 
@@ -207,6 +274,7 @@ export default {
         this.score += this.currentQuestion.points || 1;
       }
     },
+
     nextQuestion() {
       if (this.isLast) {
         this.isFinished = true;
@@ -219,12 +287,13 @@ export default {
       this.userNumberAnswer = null;
       this.showResult = false;
     },
+
     restartTest() {
       this.resetTest();
       this.$emit('finish');
-      // Эмитим событие, чтобы родитель мог перезапустить тест
       this.$emit('restart');
     },
+
     resetTest() {
       this.currentIndex = 0;
       this.selectedOption = null;
@@ -234,6 +303,7 @@ export default {
       this.score = 0;
       this.isFinished = false;
     },
+
     getRandomMentorMessage(type) {
       const messages = this.mentor.current.hints[type];
       if (Array.isArray(messages)) {
@@ -315,6 +385,13 @@ export default {
   font-weight: 600;
 }
 
+.mentor-badge-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .mentor-badge-emoji {
   font-size: 1.1rem;
 }
@@ -331,52 +408,74 @@ export default {
 /* ===== ВОПРОС ===== */
 .question-text {
   font-size: 1.4rem;
-  line-height: 1.6;
-  margin-bottom: 30px;
+  line-height: 1.8;
+  margin-bottom: 20px;
   color: var(--text-primary, #f0e0d0);
   padding: 15px 20px;
   background: var(--bg-card, rgba(255, 69, 0, 0.03));
   border-radius: 12px;
   border-left: 4px solid #ff4500;
   transition: background 0.3s ease, color 0.3s ease;
+  white-space: pre-line;
 }
 
-/* ===== МЕДИА ===== */
+/* ===== МЕДИА-КОНТЕЙНЕР (изображения) ===== */
 .media-container {
-  margin-bottom: 20px;
-  padding: 15px;
-  background: rgba(0, 200, 255, 0.03);
+  margin: 15px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.media-item {
+  background: var(--bg-card, rgba(255, 255, 255, 0.02));
   border-radius: 12px;
-  border: 1px solid rgba(0, 200, 255, 0.08);
+  padding: 12px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.05));
+}
+
+.media-image {
+  text-align: center;
 }
 
 .media-image img {
   max-width: 100%;
   border-radius: 8px;
+  max-height: 500px;
+  object-fit: contain;
 }
 
 .media-caption {
-  color: var(--text-secondary, #88ccdd);
-  font-size: 0.95rem;
-  margin-top: 8px;
+  color: var(--text-secondary, #d4a088);
+  font-size: 0.9rem;
+  margin-top: 6px;
   text-align: center;
 }
 
-.media-file {
+/* ===== ФАЙЛЫ ДЛЯ СКАЧИВАНИЯ ===== */
+.files-container {
+  margin: 15px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.file-item {
   display: flex;
   justify-content: center;
 }
 
 .btn-download {
   display: inline-block;
-  padding: 10px 24px;
-  background: var(--button-bg, rgba(255, 69, 0, 0.12));
-  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.15));
+  padding: 8px 18px;
+  background: var(--button-bg, rgba(255, 69, 0, 0.1));
+  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.2));
   border-radius: 8px;
   color: var(--text-secondary, #ffa07a);
   text-decoration: none;
   transition: 0.3s;
   font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .btn-download:hover {
@@ -759,6 +858,10 @@ export default {
     width: 100%;
     max-width: 300px;
   }
+
+  .media-image img {
+    max-height: 300px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -777,25 +880,5 @@ export default {
     font-size: 0.95rem;
     padding: 12px 20px;
   }
-}
-
-.mentor-badge-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.mentor-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 14px 4px 8px;
-  background: var(--button-bg, rgba(255, 69, 0, 0.1));
-  border: 1px solid var(--border-color, rgba(255, 69, 0, 0.12));
-  border-radius: 20px;
-  font-size: 0.8rem;
-  color: var(--text-secondary, #ffa07a);
-  font-weight: 600;
 }
 </style>
