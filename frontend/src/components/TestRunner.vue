@@ -1,5 +1,5 @@
 <template>
-   <div class="test-runner" v-if="topic && topic.questions && topic.questions.length > 0">
+  <div class="test-runner" v-if="topic && topic.questions && topic.questions.length > 0">
     <div class="test-header">
       <div class="header-left">
         <h3>🔥 {{ topic.name }}</h3>
@@ -26,12 +26,13 @@
             {{ currentQuestion.media_description }}
           </p>
         </div>
-        <div v-if="currentQuestion.media_type === 'file' || currentQuestion.media_type === 'both'" class="media-file">
-          <a :href="currentQuestion.media_url" target="_blank" class="btn-download">
+        <div v-if="currentQuestion.media && currentQuestion.media.type === 'file'" class="media-file">
+          <a :href="currentQuestion.media.url" download class="btn-download">
             📥 Скачать файл
           </a>
         </div>
       </div>
+
 
       <p class="question-text">{{ currentQuestion.text }}</p>
 
@@ -239,19 +240,28 @@ export default {
         return messages[Math.floor(Math.random() * messages.length)];
       }
       return messages;
+    },
+
+    downloadFile(url) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = true;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   }
 };
 </script>
 
 <style scoped>
-
 .test-runner-empty {
   padding: 40px;
   text-align: center;
   color: var(--text-secondary, #d4a088);
   font-size: 1.2rem;
 }
+
 .test-runner {
   background: var(--test-bg, rgba(10, 5, 3, 0.9));
   backdrop-filter: blur(8px);

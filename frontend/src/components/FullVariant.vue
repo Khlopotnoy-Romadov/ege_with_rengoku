@@ -12,19 +12,11 @@
       <div v-if="loading" class="loading">🔥 Загрузка...</div>
 
       <div v-else-if="topic && topic.questions" class="questions-list">
-        <div
-          v-for="(q, index) in topic.questions"
-          :key="q.id"
-          class="question-card"
-        >
+        <div v-for="(q, index) in topic.questions" :key="q.id" class="question-card">
           <div class="question-header">
             <span class="question-number">Задание №{{ q.number || index + 1 }}</span>
             <span v-if="q.type" class="question-type">{{ q.type }}</span>
-            <span
-              v-if="q.difficulty"
-              class="question-difficulty"
-              :class="q.difficulty"
-            >
+            <span v-if="q.difficulty" class="question-difficulty" :class="q.difficulty">
               {{ q.difficulty === 'easy' ? '🟢' : q.difficulty === 'medium' ? '🟡' : '🔴' }}
             </span>
           </div>
@@ -41,7 +33,7 @@
 
           <!-- Файл -->
           <div v-if="q.media && q.media.type === 'file'" class="media-file">
-            <a :href="q.media.url" target="_blank" class="btn-download">
+            <a :href="q.media.url" download class="btn-download" @click.prevent="downloadFile(q.media.url)">
               📥 Скачать файл
             </a>
           </div>
@@ -89,6 +81,17 @@ export default {
       this.topic = null;
     } finally {
       this.loading = false;
+    }
+  },
+
+  methods: {
+    downloadFile(url) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = true;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   }
 };
@@ -145,7 +148,8 @@ export default {
   opacity: 0.8;
 }
 
-.loading, .empty {
+.loading,
+.empty {
   text-align: center;
   padding: 60px 20px;
   color: var(--text-secondary, #d4a088);
@@ -271,9 +275,11 @@ export default {
   .variant-title {
     font-size: 1.8rem;
   }
+
   .question-card {
     padding: 18px;
   }
+
   .question-text {
     font-size: 1rem;
   }
