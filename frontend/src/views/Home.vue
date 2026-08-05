@@ -8,7 +8,7 @@
             <p class="subtitle">「心を燃やせ！」 — Зажги своё сердце для экзамена</p>
           </div>
           <div class="header-right">
-            <MentorSelector />
+            <MentorSelector @change="onMentorChange" />
             <ThemeToggle />
             <router-link to="/admin" class="admin-link">⚙️ Панель управления</router-link>
           </div>
@@ -64,11 +64,13 @@ export default {
   methods: {
     navigateToSubject(slug) {
       this.$router.push(`/subject/${slug}`);
+    },
+    onMentorChange(mentor) {
+      console.log('Наставник выбран:', mentor.name);
     }
   }
 };
 </script>
-
 <style scoped>
 /* ... все стили как раньше ... */
 .home-container {

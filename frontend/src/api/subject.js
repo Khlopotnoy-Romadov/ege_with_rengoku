@@ -1,24 +1,15 @@
-import axios from 'axios';
-
-// Используем URL вашего Laravel
-const API_BASE = 'http://127.0.0.1:8000/api/v1';
+import { subjects, subjectDataMap } from '@/data';
 
 export async function mapSubjects() {
-  try {
-    const response = await axios.get(`${API_BASE}/subjects`);
-    return response.data;
-  } catch (error) {
-    console.error('Ошибка загрузки предметов:', error);
-    return [];
-  }
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return subjects;
 }
 
 export async function fetchSubject(slug) {
-  try {
-    const response = await axios.get(`${API_BASE}/subjects/${slug}/full`);
-    return response.data;
-  } catch (error) {
-    console.error('Ошибка загрузки предмета:', error);
-    return { topics: [], name: '' };
+  await new Promise(resolve => setTimeout(resolve, 300));
+  const data = subjectDataMap[slug];
+  if (!data) {
+    throw new Error(`Предмет "${slug}" не найден`);
   }
+  return data;
 }

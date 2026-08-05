@@ -1,5 +1,5 @@
 <template>
-  <div class="test-runner">
+   <div class="test-runner" v-if="topic && topic.questions && topic.questions.length > 0">
     <div class="test-header">
       <div class="header-left">
         <h3>🔥 {{ topic.name }}</h3>
@@ -129,6 +129,9 @@
       </div>
     </div>
   </div>
+  <div v-else class="test-runner-empty">
+    <p>📭 В этой теме пока нет вопросов</p>
+  </div>
 </template>
 
 <script>
@@ -242,6 +245,13 @@ export default {
 </script>
 
 <style scoped>
+
+.test-runner-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-secondary, #d4a088);
+  font-size: 1.2rem;
+}
 .test-runner {
   background: var(--test-bg, rgba(10, 5, 3, 0.9));
   backdrop-filter: blur(8px);
