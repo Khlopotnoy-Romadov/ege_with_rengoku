@@ -1,18 +1,10 @@
 import { subjects } from './subjects';
-import { informaticsData } from './informatics';
-import { mathData } from './math';
+import { informaticsData } from './informatics/index.js';
 
-// Маппинг предметов к данным
-export const subjectDataMap = {
+const subjectDataMap = {
   informatics: informaticsData,
-  math: mathData,
-  // Добавляйте новые предметы сюда
+  // math: mathData,
   // russian: russianData,
-  // python: pythonData,
-  // frontend: frontendData,
-  // php: phpData,
-  // chess: chessData,
 };
 
-// Экспортируем всё
-export { subjects };
+export { subjects, subjectDataMap };
