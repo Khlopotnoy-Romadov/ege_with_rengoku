@@ -24,13 +24,9 @@
       <!-- 2. Таблица -->
       <TableRenderer v-if="currentQuestion.table" :tableData="currentQuestion.table" />
 
-      <!-- 3. Изображения (только image) -->
+      <!-- 3. Изображения -->
       <div v-if="getImagesList(currentQuestion).length > 0" class="media-container">
-        <div
-          v-for="(item, idx) in getImagesList(currentQuestion)"
-          :key="idx"
-          class="media-item"
-        >
+        <div v-for="(item, idx) in getImagesList(currentQuestion)" :key="idx" class="media-item">
           <div class="media-image">
             <img :src="item.url" :alt="item.description || 'Схема к заданию'" />
             <p v-if="item.description" class="media-caption">
@@ -40,66 +36,37 @@
         </div>
       </div>
 
-      <!-- 4. Файлы для скачивания (только file) -->
+      <!-- 4. Файлы -->
       <div v-if="getFilesList(currentQuestion).length > 0" class="files-container">
-        <div
-          v-for="(item, idx) in getFilesList(currentQuestion)"
-          :key="idx"
-          class="file-item"
-        >
-          <a
-            :href="item.url"
-            download
-            class="btn-download"
-            @click.prevent="downloadFile(item.url)"
-          >
+        <div v-for="(item, idx) in getFilesList(currentQuestion)" :key="idx" class="file-item">
+          <a :href="item.url" download class="btn-download" @click.prevent="downloadFile(item.url)">
             📥 {{ item.description || 'Скачать файл' }}
           </a>
         </div>
       </div>
 
-      <!-- 5. Варианты ответов (для типа choice) -->
+      <!-- 5. Варианты ответов -->
       <div v-if="currentQuestion.question_type === 'choice'" class="options">
-        <div
-          v-for="(option, idx) in currentQuestion.options"
-          :key="idx"
-          class="option-item"
-          :class="{
-            selected: selectedOption === String.fromCharCode(65 + idx),
-            correct: showResult && String.fromCharCode(65 + idx) === currentQuestion.correct,
-            wrong: showResult && selectedOption === String.fromCharCode(65 + idx) && selectedOption !== currentQuestion.correct
-          }"
-          @click="selectOption(String.fromCharCode(65 + idx))"
-        >
+        <div v-for="(option, idx) in currentQuestion.options" :key="idx" class="option-item" :class="{
+          selected: selectedOption === String.fromCharCode(65 + idx),
+          correct: showResult && String.fromCharCode(65 + idx) === currentQuestion.correct,
+          wrong: showResult && selectedOption === String.fromCharCode(65 + idx) && selectedOption !== currentQuestion.correct
+        }" @click="selectOption(String.fromCharCode(65 + idx))">
           <span class="option-label">{{ String.fromCharCode(65 + idx) }}.</span>
           <span class="option-text">{{ option }}</span>
         </div>
       </div>
 
-      <!-- 6. Ввод ответа (для типа input) -->
+      <!-- 6. Ввод ответа -->
       <div v-else class="input-answer">
         <label class="input-label">
           <span v-if="currentQuestion.answer_type === 'number'">🔢 Введите число:</span>
           <span v-else>✍️ Введите ваш ответ:</span>
         </label>
-        <input
-          v-if="currentQuestion.answer_type === 'number'"
-          type="number"
-          v-model.number="userNumberAnswer"
-          :disabled="showResult"
-          placeholder="Введите число..."
-          class="answer-input"
-          @keyup.enter="checkAnswer"
-        />
-        <input
-          v-else
-          type="text"
-          v-model="userInputAnswer"
-          :disabled="showResult"
-          placeholder="Введите ответ..."
-          class="answer-input"
-          @keyup.enter="checkAnswer"
-        />
+        <input v-if="currentQuestion.answer_type === 'number'" type="number" v-model.number="userNumberAnswer"
+          :disabled="showResult" placeholder="Введите число..." class="answer-input" @keyup.enter="checkAnswer" />
+        <input v-else type="text" v-model="userInputAnswer" :disabled="showResult" placeholder="Введите ответ..."
+          class="answer-input" @keyup.enter="checkAnswer" />
       </div>
 
       <!-- 7. Кнопка ответа -->
@@ -107,7 +74,7 @@
         ⚔️ Ответить
       </button>
 
-      <!-- 8. Результат с сообщением от наставника -->
+      <!-- 8. Результат -->
       <div v-if="showResult" class="result-feedback">
         <div v-if="isAnswerCorrect" class="correct-feedback">
           <div class="mentor-message correct-message">
@@ -127,7 +94,7 @@
             </div>
           </div>
           <div class="correct-answer-display">
-            ✅ Правильный ответ: <strong>{{ currentQuestion.correct }}</strong>
+            ✅ Правильный ответ: <strong>{{ currentQuestion.correctAnswer}}</strong>
           </div>
           <span v-if="currentQuestion.hint" class="hint">
             💡 Подсказка: {{ currentQuestion.hint }}
@@ -139,7 +106,7 @@
       </div>
     </div>
 
-    <!-- 9. Экран результатов -->
+    <!-- 9. Результаты -->
     <div v-if="isFinished" class="result-screen">
       <h2>🔥 結果 (Результат)</h2>
 
@@ -173,7 +140,7 @@
     </div>
   </div>
   <div v-else class="test-runner-empty">
-    <p>📭 В этой теме пока нет вопросов</p>
+    <p>📭 В этом варианте пока нет вопросов</p>
   </div>
 </template>
 
@@ -204,77 +171,85 @@ export default {
   },
   computed: {
     currentQuestion() {
-      return this.topic.questions[this.currentIndex] || null;
+      return this.topic?.questions?.[this.currentIndex] || null;
     },
     isLast() {
-      return this.currentIndex === this.topic.questions.length - 1;
+      return this.currentIndex === (this.topic?.questions?.length || 0) - 1;
     },
     canAnswer() {
-      if (this.currentQuestion?.question_type === 'choice') {
+      if (!this.currentQuestion) return false;
+      if (this.currentQuestion.question_type === 'choice') {
         return this.selectedOption !== null;
       }
-      if (this.currentQuestion?.answer_type === 'number') {
+      if (this.currentQuestion.answer_type === 'number') {
         return this.userNumberAnswer !== null && this.userNumberAnswer !== '';
       }
-      return this.userInputAnswer.trim() !== '';
+      // Для текстового ввода — проверяем, что не пусто
+      return this.userInputAnswer && this.userInputAnswer.trim() !== '';
     },
     isAnswerCorrect() {
-      if (this.currentQuestion?.question_type === 'choice') {
-        return this.selectedOption === this.currentQuestion.correct;
+      if (!this.currentQuestion) return false;
+      
+      const correct = this.currentQuestion.correctAnswer
+      if (correct === undefined || correct === null) return false;
+      
+      // Тип "choice"
+      if (this.currentQuestion.question_type === 'choice') {
+        return this.selectedOption === correct;
       }
-      if (this.currentQuestion?.answer_type === 'number') {
-        return this.userNumberAnswer == this.currentQuestion.correct;
+      
+      // Тип "number"
+      if (this.currentQuestion.answer_type === 'number') {
+        return this.userNumberAnswer == correct;
       }
-      return this.userInputAnswer.trim().toLowerCase() === this.currentQuestion.correct.trim().toLowerCase();
+      
+      // Тип "input" (текстовый ввод)
+      const userAnswer = this.userInputAnswer || '';
+      return userAnswer.trim().toLowerCase() === String(correct).trim().toLowerCase();
     },
     currentMentor() {
-      return this.mentor.current;
+      if (this.mentor && this.mentor.current) {
+        return this.mentor.current;
+      }
+      const saved = localStorage.getItem('ege_mentor');
+      if (saved) {
+        const found = mentors.find(m => m.id === saved);
+        if (found) return found;
+      }
+      return defaultMentor;
     }
   },
   watch: {
-    topic() {
-      this.resetTest();
+    topic: {
+      immediate: true,
+      handler() {
+        this.resetTest();
+      }
     }
   },
   methods: {
-    /**
-     * Универсальный метод получения списка медиа
-     */
     getMediaList(question) {
       if (!question?.media) return [];
       if (Array.isArray(question.media)) return question.media;
       return [question.media];
     },
-
-    /**
-     * Получить только изображения
-     */
     getImagesList(question) {
       return this.getMediaList(question).filter(item => item.type === 'image');
     },
-
-    /**
-     * Получить только файлы
-     */
     getFilesList(question) {
       return this.getMediaList(question).filter(item => item.type === 'file');
     },
-
     selectOption(option) {
       if (this.showResult) return;
       this.selectedOption = option;
     },
-
     checkAnswer() {
       if (!this.canAnswer || this.showResult) return;
-
       this.showResult = true;
-
       if (this.isAnswerCorrect) {
         this.score += this.currentQuestion.points || 1;
       }
     },
-
     nextQuestion() {
       if (this.isLast) {
         this.isFinished = true;
@@ -287,13 +262,11 @@ export default {
       this.userNumberAnswer = null;
       this.showResult = false;
     },
-
     restartTest() {
       this.resetTest();
       this.$emit('finish');
       this.$emit('restart');
     },
-
     resetTest() {
       this.currentIndex = 0;
       this.selectedOption = null;
@@ -303,15 +276,22 @@ export default {
       this.score = 0;
       this.isFinished = false;
     },
-
     getRandomMentorMessage(type) {
-      const messages = this.mentor.current.hints[type];
-      if (Array.isArray(messages)) {
-        return messages[Math.floor(Math.random() * messages.length)];
+      const mentor = this.currentMentor;
+      if (mentor && mentor.hints && mentor.hints[type]) {
+        const messages = mentor.hints[type];
+        if (Array.isArray(messages)) {
+          return messages[Math.floor(Math.random() * messages.length)];
+        }
+        return messages;
       }
-      return messages;
+      const fallback = {
+        correct: ['✅ Отлично!', '🌟 Правильно!', '🎉 Верно!'],
+        wrong: ['❌ Неправильно', '😅 Попробуй ещё раз', '💪 Не сдавайся!']
+      };
+      const fallbackMessages = fallback[type] || ['✅ Отлично!'];
+      return fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
     },
-
     downloadFile(url) {
       const link = document.createElement('a');
       link.href = url;

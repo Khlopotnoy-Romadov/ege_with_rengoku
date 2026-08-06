@@ -10,15 +10,14 @@
 
       <div v-if="loading" class="loading">🔥 Загрузка...</div>
 
-      <template v-else-if="!loading && subjectData">
-        <!-- Выбор года -->
+      <!-- Список вариантов -->
+      <template v-else-if="!loading && subjectData && !currentTopic">
         <YearSelector
           :availableYears="availableYears"
           :selectedYear="selectedYear"
           @select="selectYear"
         />
 
-        <!-- Блоки по категориям -->
         <div v-for="(variants, category) in currentYearData" :key="category" class="category-block">
           <h3 class="category-title">{{ category }}</h3>
           
@@ -51,10 +50,12 @@
         </div>
       </template>
 
+      <!-- TestRunner -->
       <TestRunner
-        v-else-if="currentTopic"
+        v-if="currentTopic"
         :topic="currentTopic"
         @finish="finishTopic"
+        @restart="finishTopic"
       />
 
       <div v-else-if="!loading && !subjectData" class="empty">
@@ -80,7 +81,6 @@ export default {
       subjectData: null,
       currentTopic: null,
       loading: true,
-      // Для навигации по годам
       availableYears: [],
       selectedYear: 2026,
       byYear: null
@@ -98,13 +98,11 @@ export default {
       this.loading = true;
       
       if (slug === 'informatics') {
-        // Для информатики — загружаем данные с группировкой по годам
         const data = await fetchInformaticsByYear();
         this.byYear = data;
         this.availableYears = Object.keys(data).map(Number).sort((a, b) => b - a);
         this.selectedYear = this.availableYears[0] || 2026;
         
-        // Для совместимости с родительским компонентом
         this.subjectData = {
           id: 'informatics',
           name: 'Информатика',
@@ -112,7 +110,6 @@ export default {
           topics: []
         };
       } else {
-        // Для других предметов — обычная загрузка
         this.subjectData = await fetchSubject(slug);
       }
     } catch (error) {
@@ -125,11 +122,19 @@ export default {
   methods: {
     selectYear(year) {
       this.selectedYear = year;
+      this.currentTopic = null;
     },
     startTopic(topic) {
-      this.currentTopic = topic;
+      
+      if (topic && topic.questions && topic.questions.length > 0) {
+        this.currentTopic = topic;
+      } else {
+        console.warn('⚠️ В варианте нет вопросов!');
+        alert('В этом варианте пока нет вопросов');
+      }
     },
     finishTopic() {
+      console.log('🏁 Тест завершён');
       this.currentTopic = null;
     }
   }
