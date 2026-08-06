@@ -1,5 +1,5 @@
 import { subjects } from './subjects';
-import { informaticsData } from './informatics/index.js';
+import { informaticsData, informaticsByYear, availableYears } from './informatics';
 
 const subjectDataMap = {
   informatics: informaticsData,
@@ -7,4 +7,10 @@ const subjectDataMap = {
   // russian: russianData,
 };
 
-export { subjects, subjectDataMap };
+// Экспортируем всё, что нужно
+export { 
+  subjects, 
+  subjectDataMap, 
+  informaticsByYear, 
+  availableYears 
+};

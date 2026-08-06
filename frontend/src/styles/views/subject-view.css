@@ -148,6 +148,24 @@
   font-size: 1.2rem;
 }
 
+.category-block {
+  margin-bottom: 30px;
+}
+
+.category-title {
+  font-size: 1.3rem;
+  color: #ff8c5a;
+  border-bottom: 2px solid var(--border-color, rgba(255, 69, 0, 0.2));
+  padding-bottom: 8px;
+  margin-bottom: 15px;
+}
+
+.category-empty {
+  color: var(--text-muted, #888);
+  font-style: italic;
+  padding: 10px 0;
+}
+
 @media (max-width: 768px) {
   .subject-title {
     font-size: 2rem;

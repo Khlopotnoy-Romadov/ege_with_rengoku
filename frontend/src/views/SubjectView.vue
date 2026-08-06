@@ -6,88 +6,126 @@
         <ThemeToggle />
       </div>
 
-      <h2 class="subject-title">{{ loading ? 'Загрузка...' : (subjectData?.name || 'Предмет не найден') }}</h2>
+      <h2 class="subject-title">{{ subjectData?.name || 'Загрузка...' }}</h2>
 
-      <!-- Состояние загрузки -->
       <div v-if="loading" class="loading">🔥 Загрузка...</div>
 
-      <!-- Список тем (вариантов) -->
-      <div v-else-if="!currentTopic && subjectData?.topics?.length" class="topics-list">
-        <div
-          v-for="topic in subjectData.topics"
-          :key="topic.id"
-          class="topic-card"
-        >
-          <div class="topic-info">
-            <h3>🔥 {{ topic.name }}</h3>
-            <p>{{ topic.description || 'Пламенная тренировка!' }}</p>
-            <span class="question-count">{{ topic.questions?.length || 0 }} заданий</span>
+      <template v-else-if="!loading && subjectData">
+        <!-- Выбор года -->
+        <YearSelector
+          :availableYears="availableYears"
+          :selectedYear="selectedYear"
+          @select="selectYear"
+        />
+
+        <!-- Блоки по категориям -->
+        <div v-for="(variants, category) in currentYearData" :key="category" class="category-block">
+          <h3 class="category-title">{{ category }}</h3>
+          
+          <div v-if="variants.length === 0" class="category-empty">
+            Нет вариантов в этой категории
           </div>
-          <div class="topic-actions">
-            <!-- Кнопка "Пройти" -->
-            <button class="btn-start" @click="startTopic(topic)">⚔️ Пройти</button>
-            <!-- Кнопка "Просмотреть вариант" -->
-            <router-link
-              :to="`/subject/${$route.params.slug}/full/${topic.id}`"
-              class="btn-view"
+
+          <div v-else class="topics-list">
+            <div
+              v-for="variant in variants"
+              :key="variant.id"
+              class="topic-card"
             >
-              📄 Просмотреть вариант
-            </router-link>
+              <div class="topic-info">
+                <h3>🔥 {{ variant.name }}</h3>
+                <p>{{ variant.description || 'Вариант ЕГЭ по информатике' }}</p>
+                <span class="question-count">{{ variant.questions?.length || 0 }} заданий</span>
+              </div>
+              <div class="topic-actions">
+                <button class="btn-start" @click="startTopic(variant)">⚔️ Пройти</button>
+                <router-link
+                  :to="`/subject/${$route.params.slug}/full/${variant.id}`"
+                  class="btn-view"
+                >
+                  📄 Просмотреть вариант
+                </router-link>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
 
-      <!-- Компонент прохождения теста -->
       <TestRunner
         v-else-if="currentTopic"
         :topic="currentTopic"
         @finish="finishTopic"
       />
 
-      <!-- Если предмет не найден -->
       <div v-else-if="!loading && !subjectData" class="empty">
         <p>📭 Предмет не найден</p>
-      </div>
-
-      <!-- Если нет тем -->
-      <div v-else-if="!loading && subjectData?.topics?.length === 0" class="empty">
-        <p>📭 В этом предмете пока нет тем</p>
       </div>
     </div>
   </FlameBackground>
 </template>
 
 <script>
-import { fetchSubject } from '@/api/subject';
+import { fetchSubject, fetchInformaticsByYear } from '@/api/subject';
 import FlameBackground from '@/components/FlameBackground.vue';
 import TestRunner from '@/components/TestRunner.vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
+import YearSelector from '@/components/YearSelector.vue';
 
 export default {
   name: 'SubjectView',
-  components: { FlameBackground, TestRunner, ThemeToggle },
+  components: { FlameBackground, TestRunner, ThemeToggle, YearSelector },
   inject: ['mentor'],
   data() {
     return {
-      subjectData: null,      // ← теперь null, а не {}
+      subjectData: null,
       currentTopic: null,
-      loading: true
+      loading: true,
+      // Для навигации по годам
+      availableYears: [],
+      selectedYear: 2026,
+      byYear: null
     };
+  },
+  computed: {
+    currentYearData() {
+      if (!this.byYear || !this.byYear[this.selectedYear]) return {};
+      return this.byYear[this.selectedYear].categories || {};
+    }
   },
   async created() {
     const slug = this.$route.params.slug;
     try {
       this.loading = true;
-      const data = await fetchSubject(slug);
-      this.subjectData = data;
+      
+      if (slug === 'informatics') {
+        // Для информатики — загружаем данные с группировкой по годам
+        const data = await fetchInformaticsByYear();
+        this.byYear = data;
+        this.availableYears = Object.keys(data).map(Number).sort((a, b) => b - a);
+        this.selectedYear = this.availableYears[0] || 2026;
+        
+        // Для совместимости с родительским компонентом
+        this.subjectData = {
+          id: 'informatics',
+          name: 'Информатика',
+          icon: '💻',
+          topics: []
+        };
+      } else {
+        // Для других предметов — обычная загрузка
+        this.subjectData = await fetchSubject(slug);
+      }
     } catch (error) {
-      console.error('Ошибка загрузки предмета:', error);
+      console.error('Ошибка загрузки:', error);
       this.subjectData = null;
     } finally {
       this.loading = false;
     }
   },
   methods: {
+    selectYear(year) {
+      this.selectedYear = year;
+    },
     startTopic(topic) {
       this.currentTopic = topic;
     },

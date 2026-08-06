@@ -1,0 +1,31 @@
+.year-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0 30px;
+}
+
+.year-btn {
+  padding: 10px 24px;
+  border: 2px solid var(--border-color, rgba(255, 69, 0, 0.2));
+  border-radius: 30px;
+  background: transparent;
+  color: var(--text-secondary, #ffa07a);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.year-btn:hover {
+  background: rgba(255, 69, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.year-btn.active {
+  background: #ff4500;
+  border-color: #ff4500;
+  color: #fff;
+  box-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
+}

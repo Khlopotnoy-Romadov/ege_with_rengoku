@@ -14,6 +14,7 @@ import './styles/components/theme-toggle.css';
 import './styles/views/home.css';
 import './styles/views/subject-view.css';
 import './styles/components/mentor-selector.css';
+import './styles/components/year-selector.css'
 
 const app = createApp(App);
 app.use(router);
