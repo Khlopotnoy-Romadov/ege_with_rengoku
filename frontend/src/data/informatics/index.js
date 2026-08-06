@@ -1,7 +1,7 @@
 // Реальные варианты ЕГЭ
 import { demo2026 } from './real/demo-2026';
-// import { real2025 } from './real/real-2025';
-// import { real2024 } from './real/real-2024';
+import { early2026 } from './real/early-2026';
+import { open2026 } from './real/open-2026';
 
 // Варианты из сборника Крылова
 import { variant1 } from './krylov/variant1';
@@ -12,6 +12,7 @@ import { variant1 } from './krylov/variant1';
 
 // Другие варианты
 // import { other2026 } from './other/other-2026';
+import { testVariant } from './other/test-variant';
 
 
 // ============================================================
@@ -22,10 +23,10 @@ export const informaticsByYear = {
   2026: {
     label: '2026',
     categories: {
-      'Реальные варианты ЕГЭ': [demo2026],
+      'Реальные варианты ЕГЭ': [demo2026, early2026, open2026],
       'Сборник С. С. Крылова 2026': [variant1],
       'Варианты СтатГрад': [],
-      'Другие варианты': []
+      'Другие варианты': [testVariant]
     }
   },
   2025: {
