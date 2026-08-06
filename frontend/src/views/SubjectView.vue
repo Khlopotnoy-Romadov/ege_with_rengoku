@@ -11,7 +11,7 @@
       <div v-if="loading" class="loading">🔥 Загрузка...</div>
 
       <!-- Список вариантов -->
-      <template v-else-if="!loading && subjectData && !currentTopic">
+      <template v-else-if="!loading && subjectData && !currentTopic && !showResultsPage">
         <YearSelector
           :availableYears="availableYears"
           :selectedYear="selectedYear"
@@ -56,8 +56,21 @@
         :topic="currentTopic"
         @finish="finishTopic"
         @restart="finishTopic"
+        @showResults="showResults"
       />
 
+      <!-- Страница результатов -->
+      <ResultsPage
+        v-else-if="showResultsPage"
+        :topic="resultsData.topic"
+        :results="resultsData.results"
+        :score="resultsData.score"
+        :total="resultsData.total"
+        @back="backToVariants"
+        @retry="retryVariant"
+      />
+
+      <!-- Пусто -->
       <div v-else-if="!loading && !subjectData" class="empty">
         <p>📭 Предмет не найден</p>
       </div>
@@ -71,10 +84,11 @@ import FlameBackground from '@/components/FlameBackground.vue';
 import TestRunner from '@/components/TestRunner.vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
 import YearSelector from '@/components/YearSelector.vue';
+import ResultsPage from '@/components/ResultsPage.vue';
 
 export default {
   name: 'SubjectView',
-  components: { FlameBackground, TestRunner, ThemeToggle, YearSelector },
+  components: { FlameBackground, TestRunner, ThemeToggle, YearSelector, ResultsPage },
   inject: ['mentor'],
   data() {
     return {
@@ -83,7 +97,14 @@ export default {
       loading: true,
       availableYears: [],
       selectedYear: 2026,
-      byYear: null
+      byYear: null,
+      showResultsPage: false,
+      resultsData: {
+        topic: null,
+        results: [],
+        score: 0,
+        total: 0
+      }
     };
   },
   computed: {
@@ -123,19 +144,32 @@ export default {
     selectYear(year) {
       this.selectedYear = year;
       this.currentTopic = null;
+      this.showResultsPage = false;
     },
     startTopic(topic) {
-      
       if (topic && topic.questions && topic.questions.length > 0) {
         this.currentTopic = topic;
+        this.showResultsPage = false;
       } else {
         console.warn('⚠️ В варианте нет вопросов!');
         alert('В этом варианте пока нет вопросов');
       }
     },
     finishTopic() {
-      console.log('🏁 Тест завершён');
       this.currentTopic = null;
+    },
+    showResults(data) {
+      this.resultsData = data;
+      this.showResultsPage = true;
+      this.currentTopic = null;
+    },
+    backToVariants() {
+      this.showResultsPage = false;
+      this.currentTopic = null;
+    },
+    retryVariant() {
+      this.showResultsPage = false;
+      this.currentTopic = this.resultsData.topic;
     }
   }
 };

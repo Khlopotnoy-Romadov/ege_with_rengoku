@@ -18,13 +18,10 @@
     </div>
 
     <div class="question-block" v-if="currentQuestion">
-      <!-- 1. Текст вопроса -->
       <p class="question-text">{{ currentQuestion.text }}</p>
 
-      <!-- 2. Таблица -->
       <TableRenderer v-if="currentQuestion.table" :tableData="currentQuestion.table" />
 
-      <!-- 3. Изображения -->
       <div v-if="getImagesList(currentQuestion).length > 0" class="media-container">
         <div v-for="(item, idx) in getImagesList(currentQuestion)" :key="idx" class="media-item">
           <div class="media-image">
@@ -36,7 +33,6 @@
         </div>
       </div>
 
-      <!-- 4. Файлы -->
       <div v-if="getFilesList(currentQuestion).length > 0" class="files-container">
         <div v-for="(item, idx) in getFilesList(currentQuestion)" :key="idx" class="file-item">
           <a :href="item.url" download class="btn-download" @click.prevent="downloadFile(item.url)">
@@ -45,7 +41,6 @@
         </div>
       </div>
 
-      <!-- 5. Варианты ответов -->
       <div v-if="currentQuestion.question_type === 'choice'" class="options">
         <div v-for="(option, idx) in currentQuestion.options" :key="idx" class="option-item" :class="{
           selected: selectedOption === String.fromCharCode(65 + idx),
@@ -57,7 +52,6 @@
         </div>
       </div>
 
-      <!-- 6. Ввод ответа -->
       <div v-else class="input-answer">
         <label class="input-label">
           <span v-if="currentQuestion.answer_type === 'number'">🔢 Введите число:</span>
@@ -69,12 +63,10 @@
           class="answer-input" @keyup.enter="checkAnswer" />
       </div>
 
-      <!-- 7. Кнопка ответа -->
       <button v-if="!showResult" class="btn-check" @click="checkAnswer" :disabled="!canAnswer">
         ⚔️ Ответить
       </button>
 
-      <!-- 8. Результат -->
       <div v-if="showResult" class="result-feedback">
         <div v-if="isAnswerCorrect" class="correct-feedback">
           <div class="mentor-message correct-message">
@@ -94,7 +86,7 @@
             </div>
           </div>
           <div class="correct-answer-display">
-            ✅ Правильный ответ: <strong>{{ currentQuestion.correctAnswer}}</strong>
+            ✅ Правильный ответ: <strong>{{ currentQuestion.correctAnswer }}</strong>
           </div>
           <span v-if="currentQuestion.hint" class="hint">
             💡 Подсказка: {{ currentQuestion.hint }}
@@ -106,7 +98,7 @@
       </div>
     </div>
 
-    <!-- 9. Результаты -->
+    <!-- Экран результатов (краткий) -->
     <div v-if="isFinished" class="result-screen">
       <h2>🔥 結果 (Результат)</h2>
 
@@ -134,6 +126,9 @@
       </p>
 
       <div class="result-actions">
+        <button class="btn-retry" @click="showFullResults">
+          📊 Посмотреть подробные результаты
+        </button>
         <button class="btn-retry" @click="$emit('finish')">🏠 Вернуться к темам</button>
         <button class="btn-retry" @click="restartTest">🔄 Пройти заново</button>
       </div>
@@ -166,7 +161,9 @@ export default {
       userNumberAnswer: null,
       showResult: false,
       score: 0,
-      isFinished: false
+      isFinished: false,
+      userAnswers: [],
+      answerStatuses: []
     };
   },
   computed: {
@@ -184,26 +181,22 @@ export default {
       if (this.currentQuestion.answer_type === 'number') {
         return this.userNumberAnswer !== null && this.userNumberAnswer !== '';
       }
-      // Для текстового ввода — проверяем, что не пусто
       return this.userInputAnswer && this.userInputAnswer.trim() !== '';
     },
     isAnswerCorrect() {
       if (!this.currentQuestion) return false;
       
-      const correct = this.currentQuestion.correctAnswer
+      const correct = this.currentQuestion.correctAnswer;
       if (correct === undefined || correct === null) return false;
       
-      // Тип "choice"
       if (this.currentQuestion.question_type === 'choice') {
         return this.selectedOption === correct;
       }
       
-      // Тип "number"
       if (this.currentQuestion.answer_type === 'number') {
         return this.userNumberAnswer == correct;
       }
       
-      // Тип "input" (текстовый ввод)
       const userAnswer = this.userInputAnswer || '';
       return userAnswer.trim().toLowerCase() === String(correct).trim().toLowerCase();
     },
@@ -239,28 +232,75 @@ export default {
     getFilesList(question) {
       return this.getMediaList(question).filter(item => item.type === 'file');
     },
+    getCurrentUserAnswer() {
+      if (!this.currentQuestion) return '—';
+      
+      if (this.currentQuestion.question_type === 'choice') {
+        return this.selectedOption || '—';
+      }
+      if (this.currentQuestion.answer_type === 'number') {
+        return this.userNumberAnswer !== null ? String(this.userNumberAnswer) : '—';
+      }
+      return this.userInputAnswer || '—';
+    },
     selectOption(option) {
       if (this.showResult) return;
       this.selectedOption = option;
     },
     checkAnswer() {
       if (!this.canAnswer || this.showResult) return;
+      
       this.showResult = true;
-      if (this.isAnswerCorrect) {
+      
+      const userAnswer = this.getCurrentUserAnswer();
+      this.userAnswers[this.currentIndex] = userAnswer;
+      
+      const isCorrect = this.isAnswerCorrect;
+      this.answerStatuses[this.currentIndex] = isCorrect;
+      
+      if (isCorrect) {
         this.score += this.currentQuestion.points || 1;
       }
     },
     nextQuestion() {
+      if (!this.showResult) {
+        const userAnswer = this.getCurrentUserAnswer();
+        this.userAnswers[this.currentIndex] = userAnswer;
+        this.answerStatuses[this.currentIndex] = false;
+      }
+      
       if (this.isLast) {
-        this.isFinished = true;
-        this.$emit('finish');
+        this.showFullResults();
         return;
       }
+      
       this.currentIndex++;
       this.selectedOption = null;
       this.userInputAnswer = '';
       this.userNumberAnswer = null;
       this.showResult = false;
+    },
+    showFullResults() {
+      const results = this.topic.questions.map((q, index) => {
+        const userAnswer = this.userAnswers[index] || '—';
+        const isCorrect = this.answerStatuses[index] || false;
+        
+        return {
+          number: q.number || index + 1,
+          questionText: q.text,
+          userAnswer: userAnswer,
+          correctAnswer: q.correctAnswer || q.correct || '—',
+          isCorrect: isCorrect,
+          hint: q.hint || null
+        };
+      });
+
+      this.$emit('showResults', {
+        topic: this.topic,
+        results: results,
+        score: this.score,
+        total: this.topic.questions.length
+      });
     },
     restartTest() {
       this.resetTest();
@@ -275,6 +315,8 @@ export default {
       this.showResult = false;
       this.score = 0;
       this.isFinished = false;
+      this.userAnswers = [];
+      this.answerStatuses = [];
     },
     getRandomMentorMessage(type) {
       const mentor = this.currentMentor;

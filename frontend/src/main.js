@@ -15,6 +15,7 @@ import './styles/views/home.css';
 import './styles/views/subject-view.css';
 import './styles/components/mentor-selector.css';
 import './styles/components/year-selector.css'
+import './styles/components/results-page.css';
 
 const app = createApp(App);
 app.use(router);
