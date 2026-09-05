@@ -69,10 +69,15 @@
             </div>
           </div>
 
-          <!-- 5. Ответ -->
+          <!-- 5. Ответ (скрыт, раскрывается по клику) -->
           <div class="question-answer">
-            <span class="answer-label">✅ Правильный ответ: </span>
-            <span class="answer-value">{{ q.correctAnswer }}</span>
+            <button class="btn-reveal-answer" @click="revealed[q.id] = !revealed[q.id]">
+              <span class="reveal-icon">{{ revealed[q.id] ? '🙈' : '🔒' }}</span>
+              <span class="reveal-text">{{ revealed[q.id] ? 'Скрыть ответ' : 'Показать ответ' }}</span>
+            </button>
+            <div v-if="revealed[q.id]" class="answer-value">
+              ✅ Правильный ответ: <strong>{{ q.correctAnswer }}</strong>
+            </div>
           </div>
 
           <!-- 6. Подсказка -->
@@ -101,7 +106,8 @@ export default {
   data() {
     return {
       topic: null,
-      loading: true
+      loading: true,
+      revealed: {} // id вопроса → булево значение раскрытия ответа
     };
   },
   async created() {
@@ -152,3 +158,42 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.btn-reveal-answer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-reveal-answer:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: scale(1.03);
+}
+
+.reveal-icon {
+  font-size: 16px;
+}
+
+.answer-value {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 8px 14px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  color: #16a34a;
+  font-size: 15px;
+  line-height: 1.5;
+}
+</style>

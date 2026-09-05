@@ -102,6 +102,118 @@ export const mentors = [
       good: '💪 「よくやった。まだ道は長い」 — Хорошая работа. Путь ещё долог.',
       bad: '🔥 「まだまだだな。もっと修行しろ」 — Тебе нужно больше тренироваться.'
     }
+  },
+
+  // ==================== ДЖЕЙСОН СТЕЙХЕМ ====================
+  {
+    id: 'statham',
+    name: 'Джейсон Стейтем',
+    anime: 'Реальное кино',
+    emoji: '👊',
+    color: '#1a1a1a',
+    avatar: '/mentors/statham.jpg',
+    quote: '「You want to know what violence is?」 — Хочешь узнать, что такое насилие? А шутка. Просто решай задания.',
+    description: 'Мужик. Без лишних слов. Если задание — это демоны, он их разнесёт.',
+    personality: 'Брутальный, лаконичный, с британским юмором',
+    hints: {
+      correct: [
+        '「Right. Spot on. You\'re a right legend, mate.」 — Верно. Ты легенда, чувак.',
+        '「Brilliant. Absolutely brilliant.」 — Блестяще. Вполне себе.',
+        '「Good lad. Now that\'s what I call a job done.」 — Молодец. Вот это я понимаю — работа сделана.'
+      ],
+      wrong: [
+        '「Right. That was... not great. Try again.」 — Ну... не очень. Попробуй ещё.',
+        '「Mate, that answer had more holes than a swiss cheese.」 — Чувак, ответ дырявее швейцарского сыра.',
+        '「Oi. Get back in the ring.」 — Эй. Снова в ринг.'
+      ],
+      perfect: '🌟 「Absolute legend. You didn\'t even break a sweat.」 — Абсолютная легенда. Ты даже не вспотел.',
+      good: '💪 「Not bad, mate. Not bad at all.」 — Неплохо, чувак. Вполне неплохо.',
+      bad: '🔥 「Right. Looks like we need a bit more training. But you\'ll be alright.」 — Ладно. Видимо, нужно потренироваться. Но ты справишься.'
+    }
+  },
+
+  // ==================== КИАНУ РИВЗ ====================
+  {
+    id: 'keanu',
+    name: 'Киану Ривз',
+    anime: 'Матрица / Джон Уик',
+    emoji: '🐕',
+    color: '#2d2d2d',
+    avatar: '/mentors/keanu.jpg',
+    quote: '「That was really nice of you」 — Это было очень мило с твоей стороны. Удачи на экзамене.',
+    description: 'Спокойный, мудрый, с доброй улыбкой. Поможет даже с самым сложным заданием.',
+    personality: 'Спокойный, добрый, философ',
+    hints: {
+      correct: [
+        '「That was really nice. You did great, man.」 — Это было здорово. Ты справился отлично.',
+        '「Yeah. Perfect. I believe in you.」 — Да. Верно. Я верю в тебя.',
+        '「Awesome. Seriously. Keep going.」 — Круто. Серьёзно. Продолжай.'
+      ],
+      wrong: [
+        '「Hey. It\'s okay. Everyone makes mistakes.」 — Эй. Всё нормально. У всех бывают ошибки.',
+        '「Take a deep breath. Try again. You got this.」 — Сделай глубокий вдох. Попробуй ещё раз. У тебя получится.',
+        '「It\'s fine. Really. This is how we learn.」 — Всё в порядке. Так мы и учимся.'
+      ],
+      perfect: '🌟 「You know what? You\'re amazing. Seriously.」 — Знаешь что? Ты потрясающий. Серьёзно.',
+      good: '💪 「That was really good. I\'m proud of you.」 — Это было очень хорошо. Я тобой горжусь.',
+      bad: '🔥 「It\'s not about giving up. It\'s about getting back up.」 — Дело не в том, чтобы сдаться. Дело в том, чтобы встать снова.'
+    }
+  },
+
+  // ==================== ВЕДЬМАК (Геральт) ====================
+  {
+    id: 'witcher',
+    name: 'Геральт из Ривии',
+    anime: 'Ведьмак',
+    emoji: '🐺',
+    color: '#4a5568',
+    avatar: '/mentors/witcher.jpg',
+    quote: '「Zasko, żebyś nie wpadł w tarapaty」 — Влезешь в проблемы — помогу. Но сначала реши задания.',
+    description: 'Хмурый ведьмак с медальоном на шее. Говорит мало, но всегда по делу.',
+    personality: 'Сдержанный, хмурый, мудрый',
+    hints: {
+      correct: [
+        '「Hm. Dobrze.」 — Хм. Хорошо.',
+        '「Bez błędu.」 — Без ошибки.',
+        '「To cię nie zaskoczy.」 — Это тебя не удивит. Правильно.'
+      ],
+      wrong: [
+        '「Hmm. To nie to. Spróbuj ponownie.」 — Хм. Не совсем. Попробуй снова.',
+        '「Zły trop.」 — Неправильный след.',
+        '「Koty się wściekły. I ty też byś się wściekł.」 — Кошки злятся. И ты бы злился. Но попробуй ещё раз.'
+      ],
+      perfect: '🌟 「Nie masz sobie równych.」 — Тебе нет равных. Иди дальше, ведьмак.',
+      good: '💪 「Dobrze Ci szło.」 — Тебе шло хорошо. Но путь ещё далёк.',
+      bad: '🔥 「Zostawiłem wiele potworów. Ale najtrudniejsze to człowiek i własna nieudolność.」 — Я оставил много чудовищ. Но самое сложное — это человек и собственная неспособность. Не сдавайся.'
+    }
+  },
+
+  // ==================== ДОКТОР СТРАНДЖ ====================
+  {
+    id: 'strange',
+    name: 'Доктор Стрэндж',
+    anime: 'Marvel / Мистический художник',
+    emoji: '🔮',
+    color: '#7b2d8e',
+    avatar: '/mentors/strange.jpg',
+    quote: '「We live in a time when there are no limits」 — Мы живём во время, когда нет границ. И нет пределов твоим знаниям.',
+    description: 'Верховный маг. Видел 14 000 605 вариантов будущего — и в одном из них ты сдашь ЕГЭ на отлично.',
+    personality: 'Элегантный, уверенный, мистический',
+    hints: {
+      correct: [
+        '「Ah, yes. That\'s one of the 14,006,05 outcomes where you got it right.」 — Да, это один из 14 000 605 вариантов, где ты ответил верно.',
+        '「Precisely. The mystic arts — and mathematics — reward precision.」 — Точно. Мистические искусства и математика поощряют точность.',
+        '「You have a gift. Don\'t waste it.」 — У тебя есть дар. Не трать его.'
+      ],
+      wrong: [
+        '「No. That is... not the correct path.」 — Нет. Это... не правильный путь.',
+        '「In another timeline, that answer would have been correct. Not here.」 — В другой временной линии этот ответ был бы верен. Здесь — нет.',
+        '「The Eye of Agamotto showed me: you need to think differently.」 — Око Агамотто показало мне: тебе нужно мыслить иначе.'
+      ],
+      perfect: '🌟 「I have seen 14,006,05 futures. In all of them, you are brilliant.」 — Я видел 14 000 605 будущих. Во всех ты brilantly.',
+      good: '💪 「You are making progress. The mystic arts do not yield to the impatient.」 — Ты прогрессируешь. Мистические искусства не сдаются нетерпеливым.',
+      bad: '🔥 「The dark dimension is not the only place where failure awaits. But so does triumph.」 — Тёмное измерение — не единственное место, где ждёт неудача. Но также и триумф.'
+    }
   }
 ];
 
